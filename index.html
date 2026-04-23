@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TempTrader v3.1</title>
+<style>
+:root {
+  --bg:#0a0c10; --s1:#111318; --s2:#181c26; --s3:#1e2235;
+  --b1:#252a40; --b2:#323755;
+  --ac:#4f8ef7; --ac2:#7c5cfc;
+  --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --info:#06b6d4;
+  --t1:#e8eaf6; --t2:#8b90b8; --t3:#4a5070;
+  --gold:#fbbf24;
+  --font:'JetBrains Mono','Fira Code','Courier New',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;min-height:100vh;}
+.hdr{background:var(--s1);border-bottom:2px solid var(--b1);padding:8px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;gap:8px;flex-wrap:wrap;}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-i{width:30px;height:30px;background:linear-gradient(135deg,var(--ac),var(--ac2));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;}
+.logo-t{font-size:14px;font-weight:700;letter-spacing:.5px;}
+.logo-v{font-size:10px;color:var(--ac);background:rgba(79,142,247,.12);border:1px solid rgba(79,142,247,.25);border-radius:3px;padding:1px 5px;margin-left:4px;}
+.clocks{display:flex;gap:6px;flex-wrap:wrap;}
+.cp{background:var(--s2);border:1px solid var(--b1);border-radius:5px;padding:4px 9px;font-size:11px;display:flex;align-items:center;gap:6px;}
+.cp-l{color:var(--t3);}
+.cp-v{color:var(--t1);font-weight:700;}
+.tabs{display:flex;background:var(--s1);border-bottom:1px solid var(--b1);padding:0 10px;overflow-x:auto;}
+.tab{padding:9px 13px;font-size:11px;font-family:var(--font);color:var(--t3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .15s;font-weight:600;}
+.tab:hover{color:var(--t2);}
+.tab.active{color:var(--ac);border-bottom-color:var(--ac);}
+.content{padding:13px;max-width:1080px;margin:0 auto;}
+.panel{display:none;}
+.panel.active{display:block;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:12px 13px;}
+.clbl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.ctit{font-size:11px;font-weight:700;color:var(--t2);margin-bottom:9px;text-transform:uppercase;letter-spacing:.8px;}
+label{font-size:11px;color:var(--t2);display:block;margin-bottom:3px;}
+input,select,textarea{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:5px;color:var(--t1);font-family:var(--font);font-size:12px;padding:6px 9px;outline:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);}
+select option{background:var(--s2);}
+textarea{resize:vertical;line-height:1.5;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:5px;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--b2);background:var(--s2);color:var(--t1);transition:all .15s;white-space:nowrap;}
+.btn:hover{background:var(--s3);border-color:var(--ac);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-p{background:var(--ac);border-color:var(--ac);color:#fff;}
+.btn-p:hover{background:#3d7af0;}
+.btn-ok{background:#14532d;border-color:#22c55e;color:var(--ok);}
+.btn-w{background:#78350f;border-color:var(--warn);color:var(--warn);}
+.btn-e{background:#7f1d1d;border-color:var(--err);color:var(--err);}
+.btn-sm{padding:3px 8px;font-size:11px;}
+.btn-bl{width:100%;justify-content:center;}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.bg{background:#14532d;color:var(--ok);border:1px solid #166534;}
+.br{background:#7f1d1d;color:var(--err);border:1px solid #991b1b;}
+.bw{background:#78350f;color:var(--warn);border:1px solid #92400e;}
+.bb{background:#1e3a5f;color:var(--ac);border:1px solid #1d4ed8;}
+.bi{background:#164e63;color:var(--info);border:1px solid #0e7490;}
+.bp{background:#3b0764;color:#a855f7;border:1px solid #7c3aed;}
+.alert{display:flex;gap:9px;padding:9px 11px;border-radius:6px;font-size:12px;margin-bottom:9px;align-items:flex-start;}
+.ai{font-size:14px;flex-shrink:0;margin-top:1px;}
+.aw{background:#78350f30;border:1px solid #92400e;color:var(--warn);}
+.ad{background:#7f1d1d30;border:1px solid #991b1b;color:var(--err);}
+.as{background:#14532d30;border:1px solid #166534;color:var(--ok);}
+.ain{background:#164e6330;border:1px solid #0e7490;color:var(--info);}
+.div{border:none;border-top:1px solid var(--b1);margin:9px 0;}
+.sh{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);margin-bottom:7px;margin-top:14px;padding-bottom:4px;border-bottom:1px solid var(--b1);}
+.sh:first-child{margin-top:0;}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.live{display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:1px 6px;border-radius:3px;background:#14532d;color:var(--ok);}
+.ldot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:pulse 1.5s infinite;display:inline-block;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+/* BRACKET TABLE */
+.bt{width:100%;border-collapse:collapse;font-size:12px;}
+.bt th{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;padding:5px 7px;border-bottom:1px solid var(--b1);text-align:left;font-weight:600;}
+.bt td{padding:6px 7px;border-bottom:1px solid var(--b1);}
+.bt tr:last-child td{border-bottom:none;}
+.bt tr:hover td{background:var(--s2);}
+.bt tr.fav td{background:rgba(79,142,247,.07);}
+.bt tr.held td{background:rgba(34,197,94,.07);border-left:3px solid var(--ok);}
+.bt tr.buyzone td{background:rgba(34,197,94,.04);}
+.bt tr.lottery td{background:rgba(251,191,36,.03);}
+.pcell{font-weight:700;font-size:14px;}
+.ph{color:var(--err);}
+.pm{color:var(--warn);}
+.pl{color:var(--ok);}
+/* SYNOPSIS */
+.syn{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:14px;font-size:12px;line-height:1.9;color:var(--t2);}
+.syn-title{font-size:11px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sig{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:5px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.sig-hold{background:#14532d;color:var(--ok);border:1px solid #166534;}
+.sig-watch{background:#78350f;color:var(--warn);border:1px solid #92400e;}
+.sig-exit{background:#7f1d1d;color:var(--err);border:1px solid #991b1b;}
+.sig-wait{background:#1e3a5f;color:var(--ac);border:1px solid #1d4ed8;}
+/* IEM row */
+.mrow{display:flex;align-items:center;gap:9px;padding:7px 9px;background:var(--s2);border-radius:5px;margin-bottom:5px;font-size:12px;border-left:3px solid var(--b1);}
+.mrow.lat{border-left-color:var(--ac);}
+.mt{color:var(--t3);min-width:48px;font-size:11px;}
+.mp{font-weight:700;font-size:15px;}
+.mp.up{color:var(--err);}
+.mp.dn{color:var(--info);}
+.mp.fl{color:var(--t2);}
+.mw{color:var(--t2);font-size:11px;}
+.mtr{margin-left:auto;font-size:18px;}
+/* POS CARD */
+.pc{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:11px;margin-bottom:9px;transition:border-color .15s;}
+.pc:hover{border-color:var(--b2);}
+.pc-hdr{display:flex;align-items:center;gap:9px;margin-bottom:8px;flex-wrap:wrap;}
+/* SCAN */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px;margin-top:10px;}
+.sc{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:11px;cursor:pointer;transition:border-color .15s;}
+.sc:hover{border-color:var(--ac);}
+.sc.smooth{border-left:3px solid var(--ac);}
+.sc.marine{border-left:3px solid var(--info);}
+.sc.coastal{border-left:3px solid #a855f7;}
+.sc.storm{border-left:3px solid var(--err);}
+/* ORDERS */
+.ord{display:flex;align-items:center;gap:8px;padding:7px 9px;background:var(--s2);border-radius:5px;margin-bottom:5px;font-size:12px;flex-wrap:wrap;}
+/* MISC */
+.frow{margin-bottom:9px;}
+.fi{display:flex;gap:8px;align-items:flex-end;}
+.fi>*{flex:1;}
+.cbar-w{height:5px;background:var(--s3);border-radius:3px;overflow:hidden;}
+.cbar{height:100%;border-radius:3px;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+@media(max-width:660px){.g2,.g3{grid-template-columns:1fr;}.clocks{display:none;}.sg{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">
+    <div class="logo-i">🌡</div>
+    <div><span class="logo-t">TempTrader</span><span class="logo-v">v3.1</span></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+    <div class="clocks" id="clocks">
+      <div class="cp"><span class="cp-l">PST</span><span class="cp-v" id="cPST">--:--</span></div>
+      <div class="cp"><span class="cp-l">MST</span><span class="cp-v" id="cMST">--:--</span></div>
+      <div class="cp"><span class="cp-l">CST</span><span class="cp-v" id="cCST">--:--</span></div>
+      <div class="cp"><span class="cp-l">EST</span><span class="cp-v" id="cEST">--:--</span></div>
+    </div>
+    <div class="cp" id="balPill" style="display:none;"><span class="cp-l">$</span><span class="cp-v" id="balVal" style="color:var(--ok);">--</span><span class="cp-l">|</span><span class="cp-v" id="portVal" style="color:var(--gold);">--</span></div>
+    <div id="connDot" style="font-size:11px;color:var(--t3);">⬤ Not connected</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('markets',this)">① Markets</button>
+  <button class="tab" onclick="showTab('positions',this)">② Positions</button>
+  <button class="tab" onclick="showTab('orders',this)">③ Orders</button>
+  <button class="tab" onclick="showTab('scan',this)">④ Scan</button>
+  <button class="tab" onclick="showTab('lateflip',this)">⚡ Late Flip</button>
+  <button class="tab" onclick="showTab('analyze',this)">⑤ Analyze</button>
+  <button class="tab" onclick="showTab('monitor',this)">⑥ Monitor</button>
+</div>
+
+<!-- ===== MARKETS ===== -->
+<div id="tab-markets" class="panel active content">
+  <div class="sh" style="margin-top:0;">Live Kalshi Bracket Ladder</div>
+  <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:11px;">
+    <div style="min-width:220px;">
+      <label>City / Series</label>
+      <select id="mkSel" onchange="loadBrackets()">
+        <option value="">-- Select --</option>
+        <optgroup label="HIGH Markets">
+          <option value="KXHIGHTPHX|KPHX|smooth">Phoenix HIGH</option>
+          <option value="KXHIGHTLV|KLAS|smooth">Las Vegas HIGH</option>
+          <option value="KXHIGHTATL|KATL|smooth">Atlanta HIGH</option>
+          <option value="KXHIGHTDAL|KDFW|smooth">Dallas HIGH</option>
+          <option value="KXHIGHAUS|KAUS|smooth">Austin HIGH</option>
+          <option value="KXHIGHTSATX|KSAT|smooth">San Antonio HIGH</option>
+          <option value="KXHIGHTOKC|KOKC|smooth">OKC HIGH</option>
+          <option value="KXHIGHDEN|KDEN|smooth">Denver HIGH</option>
+          <option value="KXHIGHTSEA|KSEA|marine">Seattle HIGH</option>
+          <option value="KXHIGHLAX|KLAX|marine">Los Angeles HIGH</option>
+          <option value="KXHIGHTSFO|KSFO|marine">San Francisco HIGH</option>
+          <option value="KXHIGHNY|KNYC|coastal">New York HIGH</option>
+          <option value="KXHIGHTBOS|KBOS|coastal">Boston HIGH</option>
+          <option value="KXHIGHTDC|KDCA|coastal">DC HIGH</option>
+          <option value="KXHIGHPHIL|KPHL|coastal">Philadelphia HIGH</option>
+          <option value="KXHIGHCHI|KMDW|coastal">Chicago HIGH</option>
+          <option value="KXHIGHTMIN|KMSP|coastal">Minneapolis HIGH</option>
+          <option value="KXHIGHMIA|KMIA|storm">Miami HIGH</option>
+          <option value="KXHIGHTHOU|KHOU|storm">Houston HIGH</option>
+          <option value="KXHIGHTNOLA|KMSY|storm">New Orleans HIGH</option>
+        </optgroup>
+        <optgroup label="LOW Markets">
+          <option value="KXLOWTPHX|KPHX|smooth">Phoenix LOW</option>
+          <option value="KXLOWTLV|KLAS|smooth">Las Vegas LOW</option>
+          <option value="KXLOWTDAL|KDFW|smooth">Dallas LOW</option>
+          <option value="KXLOWTAUS|KAUS|smooth">Austin LOW</option>
+          <option value="KXLOWTOKC|KOKC|smooth">OKC LOW</option>
+          <option value="KXLOWTDEN|KDEN|smooth">Denver LOW</option>
+          <option value="KXLOWTLAX|KLAX|marine">LA LOW</option>
+          <option value="KXLOWTSFO|KSFO|marine">SF LOW</option>
+          <option value="KXLOWTSEA|KSEA|marine">Seattle LOW</option>
+          <option value="KXLOWTCHI|KMDW|coastal">Chicago LOW</option>
+          <option value="KXLOWTBOS|KBOS|coastal">Boston LOW</option>
+          <option value="KXLOWTMIN|KMSP|coastal">Minneapolis LOW</option>
+          <option value="KXLOWTMIA|KMIA|storm">Miami LOW</option>
+          <option value="KXLOWTHOU|KHOU|storm">Houston LOW</option>
+          <option value="KXLOWTNOLA|KMSY|storm">New Orleans LOW</option>
+        </optgroup>
+      </select>
+    </div>
+    <button class="btn btn-p" onclick="loadBrackets()" id="mkBtn"><span class="spin" id="mkSpin" style="display:none;"></span>⟳ Load</button>
+    <button class="btn btn-sm" onclick="toggleMkAuto()" id="mkAutoBtn">▶ Auto 30s</button>
+    <div id="mkStat" style="font-size:11px;color:var(--t3);"></div>
+  </div>
+
+  <div id="mkMain" style="display:none;">
+    <div class="g2">
+      <!-- LEFT: brackets -->
+      <div>
+        <div class="clbl" id="mkTitle"></div>
+        <!-- Model bar -->
+        <div id="mkBar" style="margin-bottom:9px;"></div>
+        <div style="overflow-x:auto;">
+          <table class="bt">
+            <thead><tr>
+              <th>Bracket</th><th>Last%</th><th>Bid</th><th>Ask</th><th>Vol</th><th>OI</th><th>Signal</th><th></th>
+            </tr></thead>
+            <tbody id="mkBody"></tbody>
+          </table>
+        </div>
+        <!-- IEM snapshot -->
+        <div style="margin-top:10px;">
+          <div class="clbl">Station (IEM)</div>
+          <div id="mkIEM" style="font-size:12px;color:var(--t3);">Load city above.</div>
+          <button class="btn btn-sm" onclick="loadMkIEM()" style="margin-top:5px;">⟳ Refresh IEM</button>
+        </div>
+      </div>
+      <!-- RIGHT: order entry + sell target -->
+      <div>
+        <div class="clbl">Place Order</div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="frow"><label>Bracket Ticker</label><input type="text" id="mkTicker" placeholder="e.g. KXHIGHTPHX-26APR17-B85.5" style="font-size:10px;"></div>
+          <div class="fi" style="margin-bottom:8px;">
+            <div><label>Side</label><select id="mkSide"><option value="yes">YES (in bracket)</option><option value="no">NO (out)</option></select></div>
+            <div><label>Type</label><select id="mkType"><option value="limit">Limit</option><option value="market">Market</option></select></div>
+          </div>
+          <div class="fi" style="margin-bottom:8px;">
+            <div><label>Price ¢</label><input type="number" id="mkPrice" placeholder="32" min="1" max="99"></div>
+            <div><label>Contracts</label><input type="number" id="mkQty" placeholder="20" min="1"></div>
+          </div>
+          <div id="mkOrdWarn" style="font-size:11px;color:var(--warn);margin-bottom:6px;display:none;"></div>
+          <button class="btn btn-ok btn-bl" onclick="placeOrder()" id="mkPlaceBtn"><span class="spin" id="mkPlaceSpin" style="display:none;"></span>📋 Place Limit Order</button>
+          <div id="mkOrdResult" style="margin-top:7px;font-size:11px;"></div>
+        </div>
+        <div class="card" style="margin-bottom:10px;">
+          <div class="clbl">Sell Target</div>
+          <div id="mkSellT" style="font-size:18px;font-weight:700;color:var(--gold);">—</div>
+          <div id="mkSellN" style="font-size:11px;color:var(--t2);margin-top:3px;"></div>
+        </div>
+        <div class="card">
+          <div class="clbl">Your Open Orders (This Market)</div>
+          <div id="mkOrders" style="font-size:11px;color:var(--t3);">None.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="mkEmpty" style="text-align:center;color:var(--t3);padding:40px 0;font-size:12px;">Select a city to load the full bracket ladder.</div>
+</div>
+
+<!-- ===== POSITIONS ===== -->
+<div id="tab-positions" class="panel content">
+  <div class="sh" style="margin-top:0;">Position Monitor & AI Synopsis</div>
+  <div id="synArea">
+    <div class="syn"><div class="syn-title">🤖 Synopsis Engine</div><div style="color:var(--t3);">Pull from Kalshi or add positions below, then hit Generate Synopsis.</div></div>
+  </div>
+  <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;">
+    <button class="btn btn-p" onclick="generateSynopsis()" id="synBtn"><span class="spin" id="synSpin" style="display:none;"></span>🤖 Generate Synopsis</button>
+    <button class="btn" onclick="pullKalshiPositions()" id="kPullBtn"><span class="spin" id="kPullSpin" style="display:none;"></span>⬇ Pull from Kalshi</button>
+    <button class="btn btn-e btn-sm" onclick="clearPositions()">Clear All</button>
+  </div>
+  <div id="posList"></div>
+  <div class="sh">Add Position</div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:flex-end;margin-bottom:9px;">
+    <div style="flex:0 0 55px;"><label>City</label><input type="text" id="pCity" placeholder="PHX" style="text-transform:uppercase;"></div>
+    <div style="flex:0 0 95px;"><label>Bracket</label><input type="text" id="pBracket" placeholder="85-86°"></div>
+    <div style="flex:0 0 68px;"><label>Type</label><select id="pType"><option value="smooth">Smooth</option><option value="marine">Marine</option><option value="coastal">Coastal</option><option value="storm">Storm</option></select></div>
+    <div style="flex:0 0 105px;"><label>Ticker</label><input type="text" id="pTicker" placeholder="KXHIGHTPHX-..." style="font-size:10px;"></div>
+    <div style="flex:0 0 68px;"><label>Contracts</label><input type="number" id="pContracts" placeholder="20"></div>
+    <div style="flex:0 0 62px;"><label>Entry ¢</label><input type="number" id="pEntry" placeholder="32"></div>
+    <div style="flex:0 0 68px;"><label>Current ¢</label><input type="number" id="pCurrent" placeholder="65"></div>
+    <div style="flex:1;min-width:90px;"><label>Note</label><input type="text" id="pNote" placeholder="Late flip 2pm"></div>
+    <button class="btn btn-ok" onclick="addPosition()">+ Add</button>
+  </div>
+  <div class="sh">Session</div>
+  <div class="g3">
+    <div class="card"><div class="clbl">Cash Balance</div><div id="sBal" style="font-size:20px;font-weight:700;color:var(--ok);">$—</div></div>
+    <div class="card"><div class="clbl">Portfolio Value</div><div id="sPort" style="font-size:20px;font-weight:700;color:var(--gold);">$—</div></div>
+    <div class="card"><div class="clbl">Unrealized P&L</div><div id="sPnl" style="font-size:20px;font-weight:700;">$0.00</div></div>
+  </div>
+</div>
+
+<!-- ===== ORDERS ===== -->
+<div id="tab-orders" class="panel content">
+  <div class="sh" style="margin-top:0;">Open Orders</div>
+  <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+    <button class="btn btn-p" onclick="loadOrders()" id="ordBtn"><span class="spin" id="ordSpin" style="display:none;"></span>⟳ Refresh Orders</button>
+    <button class="btn btn-sm" onclick="loadFills()">Recent Fills</button>
+  </div>
+  <div id="ordList"><div style="color:var(--t3);font-size:12px;">Click Refresh to load.</div></div>
+  <div class="sh">Recent Fills</div>
+  <div id="fillList"><div style="color:var(--t3);font-size:12px;">Click "Recent Fills" to load.</div></div>
+</div>
+
+<!-- ===== SCAN ===== -->
+<div id="tab-scan" class="panel content">
+  <div class="sh" style="margin-top:0;">CityScan — IEM + Kalshi Live</div>
+  <!-- MORNING BRIEF -->
+  <div style="background:linear-gradient(135deg,rgba(79,142,247,.12),rgba(124,92,252,.08));border:1px solid rgba(79,142,247,.3);border-radius:10px;padding:14px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div style="font-size:13px;font-weight:700;color:var(--ac);margin-bottom:3px;">🤖 Morning Brief</div>
+        <div style="font-size:11px;color:var(--t3);">Fetches all cities from Kalshi + IEM, then Claude ranks the best 2-3 trades with exact entry prices and reasoning. One button.</div>
+      </div>
+      <button class="btn btn-p" onclick="runMorningBrief()" id="briefBtn" style="font-size:13px;padding:10px 18px;background:linear-gradient(135deg,var(--ac),var(--ac2));border:none;">
+        <span class="spin" id="briefSpin" style="display:none;"></span>
+        🤖 Run Morning Brief
+      </button>
+      <button class="btn btn-sm" id="briefCancelBtn" style="display:none;color:var(--err);border-color:var(--err);" onclick="window._briefAbort=true;document.getElementById('briefCancelBtn').style.display='none';">✕ Cancel</button>
+    </div>
+    <div id="briefOut" style="margin-top:12px;display:none;"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px;">
+    <button class="btn btn-sm" onclick="runScan()" id="scanBtn"><span class="spin" id="scanSpin" style="display:none;"></span>⟳ Scan Cards</button>
+    <button class="btn btn-sm" onclick="runScan('smooth')">Smooth</button>
+    <button class="btn btn-sm" onclick="runScan('marine')">Marine</button>
+    <button class="btn btn-sm" onclick="runScan('coastal')">Coastal</button>
+    <div id="scanStat" style="font-size:11px;color:var(--t3);"></div>
+  </div>
+  <div class="alert ain"><span class="ai">ℹ</span><div style="font-size:11px;"><b>Price reminder:</b> Kalshi % = last contract price ¢. Driven by Kalshi model, not consensus. ⭐ BUY ZONE = 15–35¢ brackets worth investigating. Click any card to jump to full ladder.</div></div>
+  <div class="sg" id="scanGrid"><div style="grid-column:1/-1;text-align:center;color:var(--t3);font-size:12px;padding:28px 0;">Click Scan to fetch all cities.</div></div>
+</div>
+
+<!-- ===== LATE FLIP ===== -->
+<div id="tab-lateflip" class="panel content">
+  <div class="sh" style="margin-top:0;">⚡ Late Flip Playbook Scanner</div>
+
+  <!-- Explainer -->
+  <div style="background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--t2);line-height:1.8;">
+    <b style="color:var(--gold);">Late Flip Logic:</b> When Kalshi model sits 2-3°F <em>above</em> what IEM is showing in real-time, the market favorite bracket is overpriced — and the bracket one step below it is cheap. Enter the lower bracket at 15-35¢, hold until the model reprices down to reality.<br>
+    <b style="color:var(--ok);">Strong Flip = high confidence · Moderate = check AFD · Weak = skip or tiny size</b>
+  </div>
+
+  <!-- Timezone scan buttons -->
+  <div style="background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:10px 12px;margin-bottom:12px;">
+    <div style="font-size:11px;color:var(--t3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:1px;">Scan by Region (best time windows PST)</div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+      <button class="btn btn-sm" onclick="runLateFlipScan('eastern')" style="font-size:11px;">
+        🏙 Eastern <span style="color:var(--t3);font-size:10px;">10am–3:30pm PST</span><br>
+        <span style="font-size:10px;color:var(--t3);">NYC · BOS · DC · PHL · ATL</span>
+      </button>
+      <button class="btn btn-sm" onclick="runLateFlipScan('central')" style="font-size:11px;">
+        🌽 Central/Mtn <span style="color:var(--t3);font-size:10px;">11am–4:30pm PST</span><br>
+        <span style="font-size:10px;color:var(--t3);">CHI · MSP · DFW · AUS · OKC · DEN</span>
+      </button>
+      <button class="btn btn-sm" onclick="runLateFlipScan('pacific')" style="font-size:11px;">
+        🌴 Pacific/Desert <span style="color:var(--t3);font-size:10px;">1pm–6pm PST</span><br>
+        <span style="font-size:10px;color:var(--t3);">PHX · LAS · SEA · LAX · SFO</span>
+      </button>
+      <button class="btn btn-p" onclick="runLateFlipScan('all')" id="lfBtn" style="font-size:12px;padding:8px 14px;background:linear-gradient(135deg,var(--warn),#f97316);border:none;">
+        <span class="spin" id="lfSpin" style="display:none;"></span>⚡ All Cities
+      </button>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+    <div id="lfStat" style="font-size:11px;color:var(--t3);"></div>
+    <div id="lfDateWarn" style="display:none;background:rgba(251,191,36,.12);border:1px solid var(--warn);border-radius:5px;padding:4px 10px;font-size:11px;color:var(--warn);"></div>
+  </div>
+
+  <!-- Results grid -->
+  <div id="lfResults" style="display:none;">
+    <div class="sh">🎯 Late Flip Candidates</div>
+    <div id="lfCandidates" style="margin-bottom:16px;"></div>
+    <div class="sh">Tracking Fine / Skip</div>
+    <div id="lfSkips" style="font-size:11px;color:var(--t3);"></div>
+  </div>
+  <div id="lfEmpty" style="text-align:center;color:var(--t3);font-size:12px;padding:40px 0;">
+    Choose a region or scan all cities above.
+  </div>
+
+  <!-- Hourly Forecast Panel -->
+  <div id="lfHourly" style="display:none;margin-top:14px;">
+    <div class="sh" id="lfHourlyTitle">Hourly Forecast</div>
+    <div id="lfHourlyContent"></div>
+  </div>
+</div>
+
+<!-- ===== ANALYZE ===== -->
+<div id="tab-analyze" class="panel content">
+  <div class="g2">
+    <div>
+      <div class="sh" style="margin-top:0;">AFD Analysis</div>
+      <div class="frow"><label>City</label>
+        <select id="azCity">
+          <option value="KPHX|smooth">Phoenix (Smooth)</option><option value="KATL|smooth">Atlanta (Smooth)</option>
+          <option value="KDFW|smooth">Dallas (Smooth)</option><option value="KAUS|smooth">Austin (Smooth)</option>
+          <option value="KSAT|smooth">San Antonio (Smooth)</option><option value="KOKC|smooth">OKC (Smooth)</option>
+          <option value="KDEN|smooth">Denver (Smooth)</option><option value="KSEA|marine">Seattle (Marine)</option>
+          <option value="KLAX|marine">LA (Marine)</option><option value="KSFO|marine">SF (Marine)</option>
+          <option value="KNYC|coastal">NYC (Coastal)</option><option value="KBOS|coastal">Boston (Coastal)</option>
+          <option value="KDCA|coastal">DC (Coastal)</option><option value="KPHL|coastal">Philly (Coastal)</option>
+          <option value="KMDW|coastal">Chicago (Coastal)</option><option value="KMIA|storm">Miami (Storm)</option>
+        </select>
+      </div>
+      <div class="frow">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <label style="margin-bottom:0;">AFD Text</label>
+          <button class="btn btn-sm" onclick="autoFetchAFD()" id="afdFetchBtn" style="font-size:10px;padding:3px 9px;">
+            <span class="spin" id="afdFetchSpin" style="display:none;"></span>⬇ Auto-Fetch AFD
+          </button>
+        </div>
+        <textarea id="azAFD" rows="9" placeholder="Click ⬇ Auto-Fetch AFD to load automatically, or paste NWS AFD text here manually..."></textarea>
+        <div id="afdFetchStat" style="font-size:10px;color:var(--t3);margin-top:3px;"></div>
+      </div>
+      <div class="fi" style="margin-bottom:8px;">
+        <div><label>Market Fav Bracket</label><input type="text" id="azFav" placeholder="85-86°"></div>
+        <div><label>Kalshi Model °F</label><input type="number" id="azMdl" placeholder="86.2" step="0.1"></div>
+      </div>
+      <div style="display:flex;gap:7px;">
+        <button class="btn btn-p btn-bl" onclick="runAFD()" id="azBtn"><span class="spin" id="azSpin" style="display:none;"></span>🤖 Claude Analyze</button>
+        <button class="btn btn-bl" onclick="localAFD()">⚡ Quick</button>
+      </div>
+    </div>
+    <div>
+      <div class="sh" style="margin-top:0;">METAR + TAF + T-Field</div>
+      <button class="btn btn-p btn-bl" onclick="fetchMETAR()" style="margin-bottom:8px;">⬇ METAR + TAF</button>
+      <div id="azMetStat" style="font-size:11px;color:var(--t3);margin-bottom:5px;"></div>
+      <div id="azMetBox" class="syn" style="min-height:55px;font-size:11px;margin-bottom:7px;">No data.</div>
+      <div id="azTafBox" class="syn" style="min-height:34px;font-size:11px;margin-bottom:10px;">TAF: —</div>
+      <div class="sh">T-Field Parser</div>
+      <div class="fi" style="margin-bottom:7px;">
+        <div><label>T-field</label><input type="text" id="tfIn" placeholder="T02610128" oninput="parseTF()"></div>
+        <div><label>Boundary °F</label><input type="number" id="tfBnd" placeholder="82" oninput="parseTF()"></div>
+      </div>
+      <div id="tfOut" style="display:none;" class="syn"></div>
+    </div>
+  </div>
+  <div id="azRes" style="display:none;margin-top:12px;">
+    <div class="sh">Results</div>
+    <div class="g2">
+      <div id="azCard" class="card"></div>
+      <div><div id="azConf" class="card" style="margin-bottom:9px;"></div><div id="azFlags"></div></div>
+    </div>
+    <div id="azReas" class="syn" style="display:none;margin-top:9px;"></div>
+  </div>
+</div>
+
+<!-- ===== MONITOR ===== -->
+<div id="tab-monitor" class="panel content">
+  <div class="g2">
+    <div>
+      <div class="sh" style="margin-top:0;">IEM Live Station</div>
+      <div class="fi" style="margin-bottom:8px;">
+        <div><label>Station</label>
+          <select id="monSt" onchange="onMonChange()">
+            <option value="KPHX">KPHX — Phoenix</option><option value="KATL">KATL — Atlanta</option>
+            <option value="KDFW">KDFW — Dallas</option><option value="KAUS">KAUS — Austin</option>
+            <option value="KOKC">KOKC — OKC</option><option value="KDEN">KDEN — Denver</option>
+            <option value="KSEA">KSEA — Seattle</option><option value="KLAX">KLAX — LA</option>
+            <option value="KSFO">KSFO — SF</option><option value="KNYC">KNYC — NYC</option>
+            <option value="KBOS">KBOS — Boston</option><option value="KDCA">KDCA — DC</option>
+            <option value="KPHL">KPHL — Philly</option><option value="KMDW">KMDW — Chicago</option>
+            <option value="KMSP">KMSP — Minneapolis</option><option value="KMIA">KMIA — Miami</option>
+            <option value="KHOU">KHOU — Houston</option>
+          </select>
+        </div>
+        <div><label>Type</label><select id="monType" onchange="updSell()"><option value="smooth">Smooth</option><option value="marine">Marine</option><option value="coastal">Coastal</option><option value="storm">Storm</option></select></div>
+      </div>
+      <div class="fi" style="margin-bottom:8px;">
+        <div><label>Bracket Low °F</label><input type="number" id="monLo" placeholder="85" oninput="calcSig()"></div>
+        <div><label>Bracket High °F</label><input type="number" id="monHi" placeholder="87" oninput="calcSig()"></div>
+      </div>
+      <div style="display:flex;gap:7px;margin-bottom:8px;flex-wrap:wrap;">
+        <button class="btn btn-p" onclick="fetchIEM()" id="iemBtn"><span class="spin" id="iemSpin" style="display:none;"></span>⟳ Fetch IEM</button>
+        <button class="btn btn-sm" onclick="toggleIEMAuto()" id="iemAutoBtn">▶ Auto 5min</button>
+        <button class="btn btn-sm" onclick="fetchMetarMon()">METAR</button>
+      </div>
+      <div id="monStat" style="font-size:11px;color:var(--t3);margin-bottom:8px;"></div>
+      <div id="monHist"><div style="color:var(--t3);font-size:12px;padding:8px 0;">No readings yet.</div></div>
+      <div class="sh">Manual Entry</div>
+      <div class="fi" style="margin-bottom:6px;">
+        <input type="text" id="manT" placeholder="14:51"><input type="number" id="manF" placeholder="°F" step="0.1"><input type="text" id="manW" placeholder="Wind">
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ok btn-sm" onclick="addMan()">+ Add</button>
+        <button class="btn btn-e btn-sm" onclick="clearMan()">Clear</button>
+      </div>
+      <div id="manHist" style="margin-top:8px;"></div>
+    </div>
+    <div>
+      <div class="sh" style="margin-top:0;">Signal</div>
+      <div class="sig sig-wait" id="monSig" style="display:flex;width:100%;justify-content:center;margin-bottom:8px;">Enter bracket bounds</div>
+      <div id="monNote" style="font-size:11px;color:var(--t2);margin-bottom:10px;min-height:28px;"></div>
+      <div id="monRev" class="alert ad" style="display:none;"><span class="ai">🔻</span><div><b>PEAK REVERSAL</b><br><span style="font-size:11px;">3 consec readings dropping 2°F+ — consider exit.</span></div></div>
+      <div id="monEw" class="alert aw" style="display:none;"><span class="ai">🌬</span><div><b>E-WIND</b><br><span id="monEwMsg" style="font-size:11px;"></span></div></div>
+      <div id="monNYC" class="alert ad" style="display:none;"><span class="ai">⚠</span><div id="monNYCMsg" style="font-size:11px;"></div></div>
+      <div class="card" style="margin-top:9px;"><div class="clbl">Gust Check</div><div id="monGust" style="font-size:11px;color:var(--t3);">Need 3 readings.</div></div>
+      <div class="card" style="margin-top:9px;"><div class="clbl">Sell Target</div><div id="monSell" style="font-size:18px;font-weight:700;color:var(--gold);">—</div><div id="monSellN" style="font-size:11px;color:var(--t2);margin-top:3px;"></div></div>
+      <div class="alert aw" style="margin-top:9px;"><span class="ai">🌙</span><div style="font-size:11px;"><b>LOW Market:</b> Sell ALL low contracts before 9pm PST. CLI can shift bracket in final hours.</div></div>
+      <div class="alert ain" style="margin-top:9px;"><span class="ai">📌</span><div style="font-size:11px;"><b>If at a loss:</b> Kalshi model often reprices upward when lower bracket becomes likely → better exit. Wait for slight recovery before cutting.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// CORE CONFIG
+// ================================================================
+// Cloudflare Worker proxy — replaces Netlify _redirects proxy
+// Worker URL: https://temptrader.necrodamus21.workers.dev
+// Forwards all requests to Kalshi API with CORS headers
+// Free tier: 100k requests/day, no build credits, no DNS issues
+const BASE = 'https://temptrader.necrodamus21.workers.dev';
+const BASE_PATH_PREFIX = '/trade-api/v2';
+
+const CCFG = {
+  KPHX:{n:'Phoenix',s:'PHX',net:'AZ_ASOS',tz:'America%2FPhoenix',type:'smooth',sell:92,wfo:'PSR'},
+  KATL:{n:'Atlanta',s:'ATL',net:'GA_ASOS',tz:'America%2FNew_York',type:'smooth',sell:92,wfo:'FFC'},
+  KDFW:{n:'Dallas',s:'DFW',net:'TX_ASOS',tz:'America%2FChicago',type:'smooth',sell:92,wfo:'FWD'},
+  KAUS:{n:'Austin',s:'AUS',net:'TX_ASOS',tz:'America%2FChicago',type:'smooth',sell:92,wfo:'EWX'},
+  KSAT:{n:'San Antonio',s:'SAT',net:'TX_ASOS',tz:'America%2FChicago',type:'smooth',sell:92,wfo:'EWX'},
+  KOKC:{n:'OKC',s:'OKC',net:'OK_ASOS',tz:'America%2FChicago',type:'smooth',sell:92,wfo:'OUN'},
+  KDEN:{n:'Denver',s:'DEN',net:'CO_ASOS',tz:'America%2FDenver',type:'smooth',sell:88,wfo:'BOU'},
+  KSEA:{n:'Seattle',s:'SEA',net:'WA_ASOS',tz:'America%2FLos_Angeles',type:'marine',sell:75,wfo:'SEW'},
+  KLAX:{n:'Los Angeles',s:'LAX',net:'CA_ASOS',tz:'America%2FLos_Angeles',type:'marine',sell:75,wfo:'LOX'},
+  KSFO:{n:'San Francisco',s:'SFO',net:'CA_ASOS',tz:'America%2FLos_Angeles',type:'marine',sell:75,wfo:'MTR'},
+  KNYC:{n:'New York',s:'NYC',net:'NY_ASOS',tz:'America%2FNew_York',type:'coastal',sell:88,wfo:'OKX'},
+  KBOS:{n:'Boston',s:'BOS',net:'MA_ASOS',tz:'America%2FNew_York',type:'coastal',sell:88,wfo:'BOX'},
+  KDCA:{n:'DC (Reagan)',s:'DCA',net:'VA_ASOS',tz:'America%2FNew_York',type:'coastal',sell:88,wfo:'LWX'},
+  KPHL:{n:'Philadelphia',s:'PHL',net:'PA_ASOS',tz:'America%2FNew_York',type:'coastal',sell:88,wfo:'PHI'},
+  KMDW:{n:'Chicago (Midway)',s:'MDW',net:'IL_ASOS',tz:'America%2FChicago',type:'coastal',sell:88,wfo:'LOT'},
+  KLAS:{n:'Las Vegas',s:'LAS',net:'NV_ASOS',tz:'America%2FLos_Angeles',type:'smooth',sell:92,wfo:'VEF'},
+  KMSP:{n:'Minneapolis',s:'MSP',net:'MN_ASOS',tz:'America%2FChicago',type:'coastal',sell:88,wfo:'MPX'},
+  KMSY:{n:'New Orleans',s:'MSY',net:'LA_ASOS',tz:'America%2FChicago',type:'storm',sell:65,wfo:'LIX'},
+  KMIA:{n:'Miami',s:'MIA',net:'FL_ASOS',tz:'America%2FNew_York',type:'storm',sell:65,wfo:'MFL'},
+  KHOU:{n:'Houston (Hobby)',s:'HOU',net:'TX_ASOS',tz:'America%2FChicago',type:'storm',sell:65,wfo:'HGX'},
+};
+const SELL = {
+  smooth:{v:'88–92¢',n:'Set GTC limit at entry. PHX/LAS: AFD is floor, not ceiling (spring bias).'},
+  marine:{v:'75¢',n:'Marine cap risk. Sell at 75¢. Sell LOWs before 9pm PST.'},
+  coastal:{v:'88¢ max',n:'Sell 80¢+ before midnight. Never hold overnight.'},
+  storm:{v:'65¢ HARD',n:'Exit at noon local. No exceptions. Bidirectional risk.'}
+};
+const EAST = new Set(['KNYC','KBOS','KDCA','KPHL','KMDW','KMSP']);
+const SMAP = {
+  KXHIGHTPHX:'KPHX',KXHIGHTATL:'KATL',KXHIGHTDAL:'KDFW',KXHIGHAUS:'KAUS',
+  KXHIGHTSATX:'KSAT',KXHIGHTOKC:'KOKC',KXHIGHDEN:'KDEN',KXHIGHTLV:'KLAS',
+  KXHIGHTSEA:'KSEA',KXHIGHLAX:'KLAX',KXHIGHTSFO:'KSFO',
+  KXHIGHNY:'KNYC',KXHIGHTBOS:'KBOS',KXHIGHTDC:'KDCA',KXHIGHPHIL:'KPHL',
+  KXHIGHCHI:'KMDW',KXHIGHTMIN:'KMSP',
+  KXHIGHMIA:'KMIA',KXHIGHTHOU:'KHOU',KXHIGHTNOLA:'KMSY',
+  KXLOWTPHX:'KPHX',KXLOWTDAL:'KDFW',KXLOWTAUS:'KAUS',KXLOWTOKC:'KOKC',
+  KXLOWTDEN:'KDEN',KXLOWTLV:'KLAS',KXLOWTLAX:'KLAX',KXLOWTSFO:'KSFO',
+  KXLOWTSEA:'KSEA',KXLOWTCHI:'KMDW',KXLOWTMIN:'KMSP',KXLOWTBOS:'KBOS',
+  KXLOWTNYC:'KNYC',KXLOWTATL:'KATL',
+  KXLOWTMIA:'KMIA',KXLOWTHOU:'KHOU',KXLOWTNOLA:'KMSY',
+};
+const SCAN_LIST = [
+  // Smooth first
+  {series:'KXHIGHTPHX',icao:'KPHX'},{series:'KXHIGHTLV',icao:'KLAS'},
+  {series:'KXHIGHTATL',icao:'KATL'},{series:'KXHIGHTDAL',icao:'KDFW'},
+  {series:'KXHIGHAUS',icao:'KAUS'},{series:'KXHIGHTSATX',icao:'KSAT'},
+  {series:'KXHIGHTOKC',icao:'KOKC'},{series:'KXHIGHDEN',icao:'KDEN'},
+  // Marine
+  {series:'KXHIGHTSEA',icao:'KSEA'},{series:'KXHIGHLAX',icao:'KLAX'},
+  {series:'KXHIGHTSFO',icao:'KSFO'},
+  // Coastal
+  {series:'KXHIGHNY',icao:'KNYC'},{series:'KXHIGHTBOS',icao:'KBOS'},
+  {series:'KXHIGHTDC',icao:'KDCA'},{series:'KXHIGHPHIL',icao:'KPHL'},
+  {series:'KXHIGHCHI',icao:'KMDW'},{series:'KXHIGHTMIN',icao:'KMSP'},
+  // Storm
+  {series:'KXHIGHMIA',icao:'KMIA'},{series:'KXHIGHTHOU',icao:'KHOU'},
+  {series:'KXHIGHTNOLA',icao:'KMSY'},
+];
+
+// ================================================================
+// STATE
+// ================================================================
+let positions = [];
+let iemRdgs = [];
+let manRdgs = [];
+let cryptoKey = null;
+let authKeyId = null;
+let curSeries = null, curICAO = null, curType = null, curBrackets = [];
+let mkAutoInt = null, iemAutoInt = null;
+let cachedBalance = null, cachedPortfolio = null;
+
+// ================================================================
+// CLOCK
+// ================================================================
+function updClocks() {
+  const n = new Date();
+  const f = tz => n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true,timeZone:tz});
+  document.getElementById('cPST').textContent = f('America/Los_Angeles');
+  document.getElementById('cMST').textContent = f('America/Denver');
+  document.getElementById('cCST').textContent = f('America/Chicago');
+  document.getElementById('cEST').textContent = f('America/New_York');
+}
+setInterval(updClocks,1000); updClocks();
+
+// ================================================================
+// TABS
+// ================================================================
+function showTab(name,btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(name==='positions') renderPositions();
+  if(name==='orders') loadOrders();
+}
+
+// ================================================================
+// AUTH — RSA-PSS via Web Crypto API
+// CRITICAL: Sign the FULL path including /trade-api/v2 prefix
+// ================================================================
+async function importKeyFromPKCS8b64(pkcs8b64) {
+  // Web Crypto API requires PKCS8 format (not PKCS1 which Kalshi gives you).
+  // The key below is pre-converted from PKCS1 to PKCS8 DER and base64-encoded.
+  const der = Uint8Array.from(atob(pkcs8b64), c=>c.charCodeAt(0));
+  return await crypto.subtle.importKey(
+    'pkcs8', der.buffer,
+    {name:'RSA-PSS', hash:'SHA-256'},
+    false, ['sign']
+  );
+}
+
+async function importKeyFromPEM(pem) {
+  // Strips PEM headers, tries PKCS8. Kalshi gives PKCS1 which won't work —
+  // use importKeyFromPKCS8b64 with pre-converted key instead.
+  const b64 = pem.replace(/-----BEGIN.*?-----/g,'').replace(/-----END.*?-----/g,'').replace(/\s/g,'');
+  const der = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+  return await crypto.subtle.importKey('pkcs8', der.buffer,
+    {name:'RSA-PSS',hash:'SHA-256'}, false, ['sign']);
+}
+
+async function makeHeaders(method, apiPath) {
+  if (!cryptoKey || !authKeyId) return null;
+  const ts = String(Date.now());
+  // FULL path: /trade-api/v2 + apiPath (strip query string)
+  const fullPath = BASE_PATH_PREFIX + apiPath.split('?')[0];
+  const msg = new TextEncoder().encode(ts + method.toUpperCase() + fullPath);
+  // saltLength: use digest length (32 for SHA-256) — matches PSS.DIGEST_LENGTH in Python SDK
+  const sigBuf = await crypto.subtle.sign({name:'RSA-PSS',saltLength:32}, cryptoKey, msg);
+  const sig = btoa(String.fromCharCode(...new Uint8Array(sigBuf)));
+  return {
+    'KALSHI-ACCESS-KEY': authKeyId,
+    'KALSHI-ACCESS-SIGNATURE': sig,
+    'KALSHI-ACCESS-TIMESTAMP': ts,
+    'Content-Type': 'application/json'
+  };
+}
+
+async function kGet(path) {
+  const h = await makeHeaders('GET', path);
+  const opts = h ? {headers:h} : {};
+  const r = await fetch(BASE + path, opts);
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e?.error?.message || `HTTP ${r.status}`); }
+  return r.json();
+}
+
+// POST and DELETE go directly through the Cloudflare Worker (same as GET)
+// CF Worker handles all methods, CORS, and header forwarding server-side
+async function kPost(path, body) {
+  const h = await makeHeaders('POST', path);
+  if (!h) throw new Error('Not authenticated — private key missing');
+  const r = await fetch(BASE + path, {method:'POST', headers:h, body:JSON.stringify(body)});
+  const text = await r.text();
+  const d = text ? JSON.parse(text) : {};
+  if (!r.ok) throw new Error(d?.error?.message || d?.message || `HTTP ${r.status}`);
+  return d;
+}
+
+async function kDelete(path) {
+  const h = await makeHeaders('DELETE', path);
+  if (!h) throw new Error('Not authenticated');
+  const r = await fetch(BASE + path, {method:'DELETE', headers:h});
+  const text = await r.text();
+  if (!r.ok) { const d = text ? JSON.parse(text) : {}; throw new Error(d?.error?.message || `HTTP ${r.status}`); }
+  return text ? JSON.parse(text) : {};
+}
+
+// Auto-init with embedded keys on load
+// KEY FORMAT NOTE: Web Crypto API requires PKCS8 DER (base64 encoded).
+// Kalshi provides PKCS1 (-----BEGIN RSA PRIVATE KEY-----).
+// The PKCS8_B64 below is the PKCS1 key converted to PKCS8 format via:
+//   openssl pkcs8 -topk8 -nocrypt -in kalshi.key -out kalshi_pkcs8.key
+// Then base64-encoded. This is what crypto.subtle.importKey('pkcs8') needs.
+(async function initAuth() {
+  const KEY_ID = 'bf6a0ef1-1101-4304-9754-fe6aa8629b88';
+  const PKCS8_B64 = 'MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC+bPXoldbPiAMJTSMNRyR+ueM+khIS8IbUhyBZMX8MJzogbur4q6/3afusj5kodrqUo29/4VXvgx2ihxDjz1VTChv3CrAqAdwykM5/4rkiy+SvYhkmqdNVanfTEuI57RqzeOFLiiZwCk1WMdpLc2799ukG30qe07dLU4iFAeLDQ4TaViin19Ii4nasfErnSHHnB58GDxy4QfskGq98VmwXc48BTlGEJDGJBm909I77xTIljSNoGQXTSbKc/c+b5nW2hD+5n8ELhob9MGcMmzBLF1ipXEO13VDvCEr2eQgARcHPp22CNf88ytBSg3QQ5Z7uDj9OG821d46ZGogGn0nRAgMBAAECggEABEF9x7VhFhVqaXTeEJ33W6ZyhOeJdD9ISSPNuhaWSf6OsNK/yT/XjIBTr8wsCmyoX/ns3BMce0BPO06Y1tmPdO4V+MoGLMMqwV3NgqvN0tBzH4USDjRXkPoynD7Y293v5cTQ5rH7SM/fIXr2366wU2hXNghLo/Pz/dDLrVrQ30enNPuEad7lM1UtT38zaOrl03zA2xXofjlBvZO6KUvIyP+P0a5WgyrP77PigVRD2gD5I1oo34f4F7H/x2M99qpcAWIKTBdKPoylpCleSKP/NzN8ubFAFrgheESDYx6Ies4b1a6Q7XslsDI9QGQwc+oJK/mPvJ3rySgGL2V2iQJsQQKBgQDn5uVzD47hoAUlzmlpF2y650I6qbU4mtma5jnm3tWVW99jVR041CymBOR/CvcyZMTPAjlDRwNb3i4IbfKGqOKK1oGDzbtU9ReH1BNlvfYdW1GdrI0qjN3L0fRby0Q/NizcDwcZ0M9qEzjs0sPBnLIaDB7HaD8Gb/ySiVjR93owwQKBgQDSNrPrhggmExdn17mbYxzEcdAaW6vh7c07JAFRHYpDRvMva7a3OVqYWVp0mUO2W82ZcvQ7Ec7StRbc4RO46bIJDEm1HWUOqY2KCTP/lzIPatOgoTS6aYI5LY3RMUWckLW3qF7wh3N3DQcT5srxbv4Y8TtRuIA83/Gfj79GtNhNEQKBgQC5G+UBkGS0E0CoqfgYbBtdoeWK4BaJBYo3jBiiAjOpEnnhV3qI90xghT1Db6RcdHVo7FR7MH8s4NAL6H+UH9EdlBYz+I/VRAKxaIbHSvfe/RrL6oWQdntBC+mrMDjc4Ei0q8Y2RCicepWQ7LhXntXH1u7mq37Li66n5byhdZLywQKBgQCXUquX6ucoyWt65C8HbYSC4U8l+kG0JKQtY5DTHImwPn3G8CoaoV3W99OGxeGZf2J0iOzJLNuOkK+Bl0DERu5TVxYkG6HouSNbb56P6f4uXP80zXcQje0hTeqd4XMz7nPxXnHhghAbbjRfHi+PNxARUm4aOM+PgsID082kj4B5kQKBgGqR6yEGmTkpu8mA9HwOZ+6z/JUUTJSrtn1rdPzWmFjWCL1c76gcSaY4088SEcRbq9LbNJLG6Uxo60n5JIKoWtG8ljNDBJSURTnpdme3FjbqHCddnfKZhpqhjngOY4SS/3SO9ODA5xSQgTDzA5N1Qnbfb6QX49f4l+OTaT3MTKLG';
+
+  // Step 1: Import key immediately (local crypto — never fails if key is valid)
+  try {
+    cryptoKey = await importKeyFromPKCS8b64(PKCS8_B64);
+    authKeyId = KEY_ID;
+  } catch(e) {
+    document.getElementById('connDot').innerHTML = `<span style="color:var(--err);">⬤ Key error: ${e.message.slice(0,40)}</span>`;
+    console.error('Key import failed:', e.message);
+    return;
+  }
+
+  // Step 2: Fetch balance to confirm API connectivity, with retry
+  // Key is loaded — mark as "key ready" first so user knows signing works
+  document.getElementById('connDot').innerHTML = '<span style="color:var(--t3);">⬤ Connecting...</span>';
+
+  const tryBalance = async (attempt) => {
+    try {
+      const d = await kGet('/portfolio/balance');
+      const bal = (d.balance/100).toFixed(2);
+      const port = (d.portfolio_value/100).toFixed(2);
+      cachedBalance = bal; cachedPortfolio = port;
+      document.getElementById('connDot').innerHTML = '<span style="color:var(--ok);">⬤ Connected</span>';
+      document.getElementById('balPill').style.display = 'flex';
+      document.getElementById('balVal').textContent = '$'+bal;
+      document.getElementById('portVal').textContent = '$'+port;
+      document.getElementById('sBal').textContent = '$'+bal;
+      document.getElementById('sPort').textContent = '$'+port;
+      console.log('TempTrader: Connected, balance $'+bal);
+    } catch(e) {
+      const isOutage = e.message.includes('503') || e.message.includes('Failed to fetch') || e.message.includes('NetworkError') || e.message.includes('502') || e.message.includes('429');
+      if (attempt < 6) {
+        // Retry up to 6 times with short delays — worker can be slow to cold-start
+        const delay = attempt < 3 ? 3000 : 6000;
+        document.getElementById('connDot').innerHTML = `<span style="color:var(--warn);">⬤ Connecting... (${attempt}/6)</span>`;
+        setTimeout(() => tryBalance(attempt + 1), delay);
+      } else if (isOutage) {
+        document.getElementById('connDot').innerHTML = '<span style="color:var(--warn);">⬤ Key OK · API unreachable · <a href="javascript:location.reload()" style="color:var(--ac);">retry</a></span>';
+        document.getElementById('balPill').style.display = 'flex';
+        document.getElementById('balVal').textContent = '—';
+        document.getElementById('portVal').textContent = '—';
+      } else {
+        document.getElementById('connDot').innerHTML = `<span style="color:var(--err);">⬤ Auth error: ${e.message.slice(0,45)}</span>`;
+      }
+      console.error('TempTrader auth attempt', attempt, ':', e.message);
+    }
+  };
+  tryBalance(1);
+})();
+
+// ================================================================
+// IEM UTILS
+// ================================================================
+function iemUrl(icao) {
+  const c = CCFG[icao]; if (!c) return null;
+  // Request 3-day window: 2 days ago through tomorrow.
+  // This ensures all timezone offsets are covered — a city that's UTC-7 at 1am UTC
+  // has its "today" data stored under the previous UTC date in IEM's system.
+  // parseIEM() filters to today's local date from the timestamps IEM returns.
+  const now = new Date();
+  const twoDaysAgo = new Date(now); twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+  const y1=twoDaysAgo.getFullYear(), m1=twoDaysAgo.getMonth()+1, d1=twoDaysAgo.getDate();
+  const y2=tomorrow.getFullYear(), m2=tomorrow.getMonth()+1, d2=tomorrow.getDate();
+  return `https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?network=${c.net}&station=${c.s}&data=tmpf,dwpf,drct,sknt,skyc1,skyl1&year1=${y1}&month1=${m1}&day1=${d1}&year2=${y2}&month2=${m2}&day2=${d2}&tz=${c.tz}&format=onlycomma&missing=M&trace=T&direct=no&report_type=1&report_type=3&report_type=4`;
+}
+
+function parseIEM(csv, filterToday=true) {
+  const rows = [];
+  for (const line of csv.split('\n')) {
+    if (!line.trim() || line.startsWith('#') || line.startsWith('station')) continue;
+    const p = line.split(',');
+    if (p.length < 3) continue;
+    const [st,valid] = p;
+    const tmpf = p[2]?.trim();
+    const dwpf = p[3]?.trim();
+    const drct = p[4]?.trim();
+    const sknt = p[5]?.trim();
+    const skyc1 = p[6]?.trim();
+    const skyl1 = p[7]?.trim();
+    // Filter valid temp FIRST (before date filtering)
+    if (!valid || tmpf==='M'||tmpf===''||isNaN(+tmpf)) continue;
+    rows.push({
+      st: st?.trim(), valid: valid?.trim(),
+      tmpf:+tmpf,
+      dwpf: dwpf==='M'||!dwpf ? null : +dwpf,
+      drct: drct==='M'||!drct ? null : +drct,
+      sknt: sknt==='M'||!sknt ? null : +sknt,
+      skyc1: skyc1||'M',
+      skyl1: skyl1==='M'||!skyl1 ? null : +skyl1
+    });
+  }
+  rows.sort((a,b)=>b.valid.localeCompare(a.valid));
+
+  if (!filterToday || !rows.length) return rows;
+
+  // IEM timestamps are in city local time (via tz= parameter).
+  // Use the most recent reading's date as "today".
+  const latestDate = rows[0].valid.slice(0,10);
+  const todayRows = rows.filter(r => r.valid.startsWith(latestDate));
+
+  // Flag stale if latest reading is >3 hours old
+  if (todayRows.length > 0) {
+    const latestMs = new Date(todayRows[0].valid.replace(' ','T')).getTime();
+    const ageMin = Math.round((Date.now() - latestMs) / 60000);
+    todayRows[0]._stale = ageMin > 180;
+    todayRows[0]._ageMin = ageMin;
+  }
+  return todayRows;
+}
+
+function wdir(d) {
+  if(d===null||isNaN(d)) return '?';
+  return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16];
+}
+function isEw(d) { return d!==null&&d>=45&&d<=135; }
+function isMCap(sky,h) { return (sky==='OVC'||sky==='BKN')&&h!==null&&h<1500; }
+
+function mkIEMRow(r, isLatest) {
+  const prev = null;
+  const wind = r.drct!==null ? `${wdir(r.drct)} ${r.sknt?Math.round(r.sknt)+'kt':''}` : '—';
+  const sky = r.skyc1&&r.skyc1!=='M' ? `${r.skyc1}${r.skyl1?'@'+Math.round(r.skyl1)+'\'':''}` : '';
+  return `<div class="mrow ${isLatest?'lat':''}">
+    <span class="mt">${r.valid?r.valid.slice(11,16):'—'}</span>
+    <span class="mp fl">${r.tmpf.toFixed(1)}°F</span>
+    <span class="mw">${wind}</span>
+    <span class="mw" style="color:var(--t3);">${sky}</span>
+    ${isLatest?'<span class="badge bb" style="font-size:9px;margin-left:4px;">LATEST</span>':''}
+  </div>`;
+}
+
+// ================================================================
+// MARKETS TAB
+// ================================================================
+async function loadBrackets() {
+  const val = document.getElementById('mkSel').value;
+  if (!val) return;
+  const [series, icao, type] = val.split('|');
+  curSeries=series; curICAO=icao; curType=type;
+  const btn=document.getElementById('mkBtn'), sp=document.getElementById('mkSpin'), stat=document.getElementById('mkStat');
+  btn.disabled=true; sp.style.display='inline-block'; stat.textContent='Loading...';
+  try {
+    const data = await fetch(`${BASE}/markets?series_ticker=${series}&status=open&limit=30`).then(r=>r.json());
+    const all = data.markets||[];
+    const today = new Date();
+    const ds = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+    let mkts = all.filter(m=>m.event_ticker.includes(ds));
+    if (!mkts.length) mkts = all.filter(m=>m.status!=='settled').slice(0,15);
+    curBrackets = mkts;
+    renderBrackets(mkts, icao, type);
+    loadMkIEM();
+    if (cryptoKey) loadMkOrders(mkts.map(m=>m.ticker));
+    stat.innerHTML = `<span class="live"><span class="ldot"></span>${mkts.length} brackets · ${new Date().toLocaleTimeString()}</span>`;
+    document.getElementById('mkMain').style.display='block';
+    document.getElementById('mkEmpty').style.display='none';
+    const st=SELL[type]||SELL.smooth;
+    document.getElementById('mkSellT').textContent=st.v;
+    document.getElementById('mkSellN').textContent=st.n;
+  } catch(e) { stat.innerHTML=`<span style="color:var(--err);">✗ ${e.message}</span>`; }
+  btn.disabled=false; sp.style.display='none';
+}
+
+function renderBrackets(mkts, icao, type) {
+  const city = CCFG[icao];
+  const heldTickers = new Set(positions.map(p=>p.ticker).filter(Boolean));
+  // Sort by current BID price (live probability) not last trade (can be stale)
+  const sorted = [...mkts].sort((a,b)=>parseFloat(b.yes_bid_dollars||b.last_price_dollars||0)-parseFloat(a.yes_bid_dollars||a.last_price_dollars||0));
+
+  document.getElementById('mkTitle').textContent = `${city?city.n:icao} — Full Bracket Ladder`;
+
+  // Visual distribution bar — use bid as current probability
+  let barHtml = '<div style="font-size:10px;color:var(--t3);margin-bottom:4px;">Kalshi current bid distribution (live market probability)</div>';
+  const maxBid = Math.max(...sorted.map(m=>parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)));
+  sorted.forEach(m => {
+    const bid = Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
+    const last = Math.round(parseFloat(m.last_price_dollars||0)*100);
+    const w = maxBid>0 ? Math.round((parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)/maxBid)*100) : 0;
+    const col = bid>=60?'var(--err)':bid>=30?'var(--warn)':'var(--ok)';
+    const sub = m.yes_sub_title||m.subtitle||m.no_sub_title||'?';
+    barHtml += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;font-size:10px;">
+      <span style="min-width:88px;color:var(--t2);">${sub}</span>
+      <div style="flex:1;background:var(--s3);border-radius:2px;height:9px;">
+        <div style="width:${w}%;height:100%;background:${col};border-radius:2px;"></div>
+      </div>
+      <span style="color:var(--t3);min-width:50px;text-align:right;">bid:${bid}¢${last!==bid?` last:${last}¢`:''}</span>
+    </div>`;
+  });
+  document.getElementById('mkBar').innerHTML = barHtml;
+
+  // Table
+  document.getElementById('mkBody').innerHTML = sorted.map(m => {
+    const last=Math.round(parseFloat(m.last_price_dollars||0)*100);
+    const bid=Math.round(parseFloat(m.yes_bid_dollars||0)*100);
+    const ask=Math.round(parseFloat(m.yes_ask_dollars||0)*100);
+    const vol=Math.round(parseFloat(m.volume_fp||0));
+    const oi=Math.round(parseFloat(m.open_interest_fp||0));
+    const sub=m.yes_sub_title||m.subtitle||m.no_sub_title||m.ticker.split('-').pop();
+    const held=heldTickers.has(m.ticker);
+    // Use BID for signal detection (current live probability)
+    const pc=bid>=60?'ph':bid>=30?'pm':'pl';
+    let sig='', sigCol='var(--t3)', trCls='';
+    if(bid>=15&&bid<=35){sig='⭐ BUY ZONE';sigCol='var(--ok)';trCls='buyzone';}
+    else if(bid<15&&bid>0){sig='🎯 Lottery';sigCol='var(--gold)';trCls='lottery';}
+    else if(bid>=60&&bid<80){sig='💰 Exit?';sigCol='var(--warn)';}
+    else if(bid>=80){sig='🔴 High';sigCol='var(--err)';}
+    if(held){trCls='held';}
+    else if(bid>=35&&bid<60){trCls='fav';}
+    return `<tr class="${trCls}">
+      <td>${held?'🟢 ':''}${sub}</td>
+      <td class="pcell ${pc}">${bid}¢</td>
+      <td style="color:var(--t2);">${bid}¢</td>
+      <td style="color:var(--t2);">${ask}¢</td>
+      <td style="color:var(--t3);">${vol.toLocaleString()}</td>
+      <td style="color:var(--t3);">${oi.toLocaleString()}</td>
+      <td style="color:${sigCol};font-size:10px;">${sig}</td>
+      <td><button class="btn btn-sm" onclick="fillOrder('${m.ticker}','${ask}','${sub}')" style="font-size:10px;padding:2px 6px;">Fill</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function fillOrder(ticker, price, sub) {
+  document.getElementById('mkTicker').value = ticker;
+  document.getElementById('mkPrice').value = price;
+  document.getElementById('mkQty').value = 20;
+  document.getElementById('mkSide').value = 'yes';
+  // Warn if above 50¢
+  const w = document.getElementById('mkOrdWarn');
+  if (+price > 50) { w.style.display='block'; w.textContent=`⚠ ${price}¢ > 50¢ entry limit. Rule: never buy above 50¢.`; }
+  else { w.style.display='none'; }
+}
+
+async function placeOrder() {
+  const ticker=document.getElementById('mkTicker').value.trim();
+  const side=document.getElementById('mkSide').value;
+  const type=document.getElementById('mkType').value;
+  const price=parseInt(document.getElementById('mkPrice').value);
+  const qty=parseInt(document.getElementById('mkQty').value);
+  const res=document.getElementById('mkOrdResult');
+  if (!ticker||!price||!qty){res.innerHTML='<span style="color:var(--err);">Fill all fields.</span>';return;}
+  if (price>50){res.innerHTML='<span style="color:var(--err);">Rule: never buy above 50¢. Reduce price.</span>';return;}
+  const btn=document.getElementById('mkPlaceBtn'),sp=document.getElementById('mkPlaceSpin');
+  btn.disabled=true; sp.style.display='inline-block';
+  try {
+    // action:'buy' is REQUIRED by Kalshi API - missing it causes "missing parameters" error
+    const body={ticker, action:'buy', side, type, count:qty};
+    if(type==='limit') body.yes_price=price;
+    const d = await kPost('/portfolio/orders', body);
+    const oid = d.order?.order_id||'OK';
+    res.innerHTML=`<span style="color:var(--ok);">✓ Order placed! ID: ${oid.slice(0,20)}</span>`;
+    // Auto-add to positions tracker
+    const sub = ticker.split('-').slice(2).join('-');
+    addPosData(curICAO||'?', sub, curType||'smooth', ticker, qty, price, null, `Placed ${new Date().toLocaleTimeString()}`);
+    renderPositions();
+    // Refresh market orders
+    if(cryptoKey) setTimeout(()=>loadMkOrders(curBrackets.map(m=>m.ticker)),1000);
+  } catch(e){ res.innerHTML=`<span style="color:var(--err);">✗ ${e.message}</span>`; }
+  btn.disabled=false; sp.style.display='none';
+}
+
+async function loadMkOrders(tickers) {
+  if(!cryptoKey) return;
+  try {
+    const d = await kGet('/portfolio/orders?status=resting&limit=50');
+    const orders = (d.orders||[]).filter(o=>tickers.includes(o.ticker));
+    const el=document.getElementById('mkOrders');
+    if(!orders.length){el.textContent='No open orders for this market.';return;}
+    el.innerHTML=orders.map(o=>{
+      const yp = parseFloat(o.yes_price||0);
+      const rc = parseFloat(o.remaining_count_fp||o.remaining_count||0);
+      const sub = o.ticker.split('-').slice(2).join('-');
+      return `<div class="ord">
+        <span class="badge ${o.side==='yes'?'bg':'br'}">${o.side?.toUpperCase()}</span>
+        <span style="color:var(--info);">${sub}</span>
+        <span class="mw">${rc.toFixed(0)} @ ${yp.toFixed(0)}¢</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--t3);">${o.status}</span>
+        <button class="btn btn-e btn-sm" style="font-size:10px;padding:2px 5px;" onclick="cancelOrder('${o.order_id}')">Cancel</button>
+      </div>`;
+    }).join('');
+  } catch(e){console.log('mkOrders err:',e.message);}
+}
+
+async function cancelOrder(id) {
+  try { await kDelete(`/portfolio/orders/${id}`); loadBrackets(); }
+  catch(e){ alert('Cancel failed: '+e.message); }
+}
+
+async function loadMkIEM() {
+  if(!curICAO) return;
+  const el=document.getElementById('mkIEM');
+  el.textContent='Loading...';
+  try {
+    const csv=await fetch(iemUrl(curICAO)).then(r=>r.text());
+    const rows=parseIEM(csv);
+    if(!rows.length){el.textContent='No IEM data.';return;}
+    const r=rows[0],prev=rows[1];
+    let tc='fl',ti='→';
+    if(prev){const d=r.tmpf-prev.tmpf;if(d>.5){tc='up';ti='↑';}else if(d<-.5){tc='dn';ti='↓';}}
+    const ew=EAST.has(curICAO)&&isEw(r.drct);
+    const mc=CCFG[curICAO]?.type==='marine'&&isMCap(r.skyc1,r.skyl1);
+    el.innerHTML=`<div class="mrow lat" style="margin-bottom:4px;">
+      <span class="mt">${r.valid.slice(11,16)}</span>
+      <span class="mp ${tc}">${r.tmpf.toFixed(1)}°F ${ti}</span>
+      <span class="mw">${wdir(r.drct)} ${r.sknt?Math.round(r.sknt)+'kt':''}</span>
+      <span class="mw" style="color:var(--t3);">${r.skyc1!=='M'?r.skyc1:''}</span>
+      ${ew?'<span class="badge bw" style="font-size:9px;">⚠ E-WIND</span>':''}
+      ${mc?'<span class="badge bi" style="font-size:9px;">⚠ MARINE CAP</span>':''}
+    </div>
+    ${rows.slice(1,3).map(x=>`<div class="mrow"><span class="mt">${x.valid.slice(11,16)}</span><span class="mp fl">${x.tmpf.toFixed(1)}°F</span><span class="mw">${wdir(x.drct)} ${x.sknt?Math.round(x.sknt)+'kt':''}</span></div>`).join('')}`;
+  } catch(e){ el.textContent='IEM error: '+e.message; }
+}
+
+let mkAutoOn=false;
+function toggleMkAuto() {
+  const btn=document.getElementById('mkAutoBtn');
+  mkAutoOn=!mkAutoOn;
+  if(mkAutoOn){mkAutoInt=setInterval(loadBrackets,30000);btn.textContent='⏸ Stop Auto';btn.classList.add('btn-w');loadBrackets();}
+  else{clearInterval(mkAutoInt);btn.textContent='▶ Auto 30s';btn.classList.remove('btn-w');}
+}
+
+// ================================================================
+// POSITIONS TAB
+// ================================================================
+function addPosData(city,bracket,type,ticker,contracts,entry,current,note) {
+  positions.push({id:Date.now(),city:city.toUpperCase(),bracket,type,ticker:ticker||'',contracts:+contracts||0,entry:+entry||0,current:current!=null?+current:null,note:note||'',ts:new Date().toISOString()});
+}
+function addPosition() {
+  const city=document.getElementById('pCity').value.trim().toUpperCase();
+  const bracket=document.getElementById('pBracket').value.trim();
+  if(!city||!bracket) return;
+  addPosData(city,bracket,document.getElementById('pType').value,document.getElementById('pTicker').value.trim(),document.getElementById('pContracts').value,document.getElementById('pEntry').value,document.getElementById('pCurrent').value||null,document.getElementById('pNote').value.trim());
+  ['pCity','pBracket','pTicker','pContracts','pEntry','pCurrent','pNote'].forEach(id=>document.getElementById(id).value='');
+  renderPositions();
+}
+function removePos(id){positions=positions.filter(p=>p.id!==id);renderPositions();}
+function clearPositions(){if(confirm('Clear all positions?')){positions=[];renderPositions();}}
+
+function renderPositions() {
+  const el=document.getElementById('posList');
+  if(!positions.length){
+    el.innerHTML='<div style="color:var(--t3);font-size:12px;padding:14px;text-align:center;border:1px dashed var(--b1);border-radius:8px;margin-bottom:9px;">No positions. Pull from Kalshi or add below.</div>';
+    renderSum(); return;
+  }
+  const typeMap={smooth:'bb',marine:'bi',coastal:'bp',storm:'br'};
+  el.innerHTML=positions.map(p=>{
+    const st=SELL[p.type]||SELL.smooth;
+    let pnlHtml='';
+    if(p.current!==null&&p.entry&&p.contracts){
+      const pnl=(p.current-p.entry)*p.contracts*.01;
+      pnlHtml=`<div><div class="clbl">P&L</div><div style="font-weight:700;color:${pnl>=0?'var(--ok)':'var(--err);'};">${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(2)}</div></div>`;
+    }
+    return `<div class="pc">
+      <div class="pc-hdr">
+        <span style="font-size:16px;font-weight:700;">${p.city}</span>
+        <span style="color:var(--info);font-size:13px;">${p.bracket}</span>
+        <span class="badge ${typeMap[p.type]||'bb'}">${p.type.toUpperCase()}</span>
+        ${p.ticker?`<span style="font-size:10px;color:var(--t3);flex:1;overflow:hidden;text-overflow:ellipsis;">${p.ticker.slice(0,35)}</span>`:''}
+        <button class="btn btn-e btn-sm" style="margin-left:auto;font-size:10px;" onclick="removePos(${p.id})">✕</button>
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-bottom:8px;">
+        <div><div class="clbl">Contracts</div><div style="font-weight:700;">${p.contracts}</div></div>
+        <div><div class="clbl">Entry</div><div style="font-weight:700;color:var(--warn);">${p.entry}¢</div></div>
+        ${p.current!==null?`<div><div class="clbl">Current</div><div style="font-weight:700;">${p.current}¢</div></div>`:''}
+        ${pnlHtml}
+        <div><div class="clbl">Sell Target</div><div style="font-weight:700;color:var(--gold);">${st.v}</div></div>
+      </div>
+      ${p.note?`<div style="font-size:10px;color:var(--t3);">${p.note}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+        ${p.ticker?`<button class="btn btn-sm" onclick="refreshPos(${p.id},'${p.ticker}')">⟳ Refresh</button>
+        <button class="btn btn-sm btn-w" onclick="placeExit(${p.id},'${p.ticker}')">🚪 Place Exit</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  renderSum();
+}
+
+function renderSum() {
+  let pnl=0;
+  positions.forEach(p=>{if(p.current!==null)pnl+=(p.current-p.entry)*p.contracts*.01;});
+  document.getElementById('sPnl').textContent=(pnl>=0?'+':'')+'$'+Math.abs(pnl).toFixed(2);
+  document.getElementById('sPnl').style.color=pnl>=0?'var(--ok)':'var(--err)';
+  if(cachedBalance) document.getElementById('sBal').textContent='$'+cachedBalance;
+  if(cachedPortfolio) document.getElementById('sPort').textContent='$'+cachedPortfolio;
+}
+
+async function refreshPos(id, ticker) {
+  try {
+    const d=await fetch(`${BASE}/markets/${ticker}`).then(r=>r.json());
+    const last=Math.round(parseFloat(d.market?.last_price_dollars||0)*100);
+    const p=positions.find(x=>x.id===id);
+    if(p){p.current=last;renderPositions();}
+  } catch(e){alert('Refresh err: '+e.message);}
+}
+
+async function placeExit(id, ticker) {
+  const p=positions.find(x=>x.id===id);
+  if(!p||!cryptoKey){alert('Need private key to place orders.');return;}
+  const st=SELL[p.type]||SELL.smooth;
+  const exitPrice=p.type==='storm'?65:p.type==='marine'?75:88;
+  if(!confirm(`Place GTC sell (NO) order: ${p.contracts} contracts of ${p.bracket} @ ${exitPrice}¢?\n\nSell target for ${p.type}: ${st.v}`)) return;
+  try {
+    // Selling YES = buying NO. To exit a YES position, place a NO buy or sell YES.
+    // Kalshi: to close a long YES position, place order action=sell side=yes
+    const body={ticker,side:'yes',action:'sell',type:'limit',count:p.contracts,yes_price:exitPrice};
+    await kPost('/portfolio/orders', body);
+    p.note=(p.note||'')+` | Exit order @${exitPrice}¢ ${new Date().toLocaleTimeString()}`;
+    renderPositions();
+    alert(`✓ Exit sell order placed at ${exitPrice}¢`);
+  } catch(e){alert('Order failed: '+e.message);}
+}
+
+async function pullKalshiPositions() {
+  const sp=document.getElementById('kPullSpin');
+  sp.style.display='inline-block';
+  try {
+    const d=await kGet('/portfolio/positions?limit=100');
+    const mpos=d.market_positions||[];
+    let added=0;
+    for(const p of mpos) {
+      const pos=parseFloat(p.position_fp||0);
+      if(pos<=0) continue;
+      const ticker=p.ticker;
+      if(!ticker) continue;
+      if(positions.find(x=>x.ticker===ticker)) continue;
+      const series=ticker.split('-')[0];
+      const icao=SMAP[series]||'?';
+      const city=CCFG[icao];
+      const sub=ticker.split('-').slice(2).join('-');
+      const cost=parseFloat(p.total_cost_dollars||0);
+      const avgCents=pos>0?Math.round(cost/pos*100):0;
+      const exp=parseFloat(p.market_exposure_dollars||0);
+      const curCents=pos>0?Math.round(exp/pos*100):0;
+      addPosData(icao||'?', sub, city?.type||'smooth', ticker, pos, avgCents, curCents, `Kalshi sync ${new Date().toLocaleTimeString()}`);
+      added++;
+    }
+    renderPositions();
+    // Also refresh balance
+    const bal=await kGet('/portfolio/balance');
+    cachedBalance=(bal.balance/100).toFixed(2);
+    cachedPortfolio=(bal.portfolio_value/100).toFixed(2);
+    document.getElementById('balVal').textContent='$'+cachedBalance;
+    document.getElementById('portVal').textContent='$'+cachedPortfolio;
+    renderSum();
+    alert(`✓ Synced ${added} new positions from Kalshi.`);
+  } catch(e){alert('Sync failed: '+e.message);}
+  sp.style.display='none';
+}
+
+// ================================================================
+// SYNOPSIS ENGINE
+// ================================================================
+async function generateSynopsis() {
+  if(!positions.length){alert('Add positions first.');return;}
+  const sp=document.getElementById('synSpin'); sp.style.display='inline-block';
+  document.getElementById('synBtn').disabled=true;
+
+  // Gather IEM data per unique city
+  const iemMap={};
+  const icaos=[...new Set(positions.map(p=>{
+    const k=Object.keys(CCFG).find(k=>CCFG[k].n.toUpperCase()===p.city||k===p.city||k.slice(1)===p.city);
+    return k||p.city;
+  }))];
+  for(const icao of icaos) {
+    if(!CCFG[icao]) continue;
+    try{const csv=await fetch(iemUrl(icao)).then(r=>r.text());iemMap[icao]=parseIEM(csv).slice(0,4);}catch{}
+  }
+
+  // Refresh Kalshi prices for positions with tickers
+  const kMap={};
+  for(const p of positions) {
+    if(!p.ticker) continue;
+    try{
+      const d=await fetch(`${BASE}/markets/${p.ticker}`).then(r=>r.json());
+      const m=d.market;
+      if(m){
+        const last=Math.round(parseFloat(m.last_price_dollars||0)*100);
+        const bid=Math.round(parseFloat(m.yes_bid_dollars||0)*100);
+        kMap[p.ticker]={last,bid,sub:m.yes_sub_title||m.subtitle};
+        p.current=last;
+      }
+    } catch{}
+  }
+  renderPositions();
+
+  const posText=positions.map(p=>{
+    const k=kMap[p.ticker];
+    const icao=Object.keys(CCFG).find(k2=>CCFG[k2].n.toUpperCase()===p.city||k2===p.city)||p.city;
+    const iem=iemMap[icao];
+    const latest=iem?.[0];
+    const pnl=k&&p.entry&&p.contracts?((k.last-p.entry)*p.contracts*.01):null;
+    const trend=iem&&iem[1]?`${iem[0].tmpf.toFixed(1)}→${iem[1].tmpf.toFixed(1)}→${iem[2]?.tmpf.toFixed(1)||'?'}°F`:'N/A';
+    return `POSITION: ${p.city} | ${p.bracket} | ${p.type.toUpperCase()} | Entry:${p.entry}¢ | Qty:${p.contracts} | Kalshi:${k?k.last+'¢ (bid:'+k.bid+'¢)':'N/A'} | Station:${latest?latest.tmpf.toFixed(1)+'°F':'N/A'} | Wind:${latest?wdir(latest.drct)+' '+(latest.sknt?Math.round(latest.sknt)+'kt':''):'N/A'} | Sky:${latest?.skyc1||'?'} | Trend:${trend} | P&L:${pnl!==null?(pnl>=0?'+':'')+'$'+Math.abs(pnl).toFixed(2):'N/A'}`;
+  }).join('\n');
+
+  const prompt=`You are TempTrader, a Kalshi temperature bracket trading analyst. Generate a BRIEF, DIRECT, ACTIONABLE synopsis.
+
+CRITICAL RULES:
+• Kalshi % = last traded price ¢ — NOT true probability. Driven purely by Kalshi model.
+• 5-min ASOS = ambiguous (rounded to whole °C = coin flip between two °F). Only trust hourly readings (:51 mark).
+• Preliminary CLI can be incorrect. 6hr NWS max overrides it (Trackhead rule).
+• If contract price is LOW/at a loss and Kalshi forecast drops: the model often reprices upward when a lower bracket becomes likely → WAIT for slight recovery before exiting. Don't panic sell.
+• E-wind East Coast = 5-8°F discount on AFD. Gulf = 2-4°F.
+• LOW markets: sell ALL before 9pm PST. Never hold to resolution.
+• PHX/LAS spring: AFD is a floor. CLR + SSW + near top of range before 3pm → bracket above is likely.
+• BOS SW advection: high can hit 5-6pm EDT. NEVER exit before 6pm EDT.
+• Two consecutive IEM hourly readings above bracket ceiling = EXIT signal.
+• Peak reversal: 3 consec readings dropping 2°F+ with wind increasing = EXIT.
+
+ACTIVE POSITIONS (${new Date().toLocaleTimeString()} local):
+${posText}
+
+For EACH position provide ONE line:
+[CITY BRACKET] 🟢/🟡/🔴 HOLD/WATCH/EXIT — 1-2 sentence reason + key risk.
+
+Then: OVERALL SESSION — one sentence summary + any urgent actions.
+Keep total under 300 words. Be direct.`;
+
+  try {
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const text=d.content?.map(b=>b.text||'').join('')||'No response.';
+    renderSynopsis(text, kMap);
+  } catch(e){renderSynopsis(`Synopsis error: ${e.message}`,kMap);}
+  sp.style.display='none'; document.getElementById('synBtn').disabled=false;
+}
+
+function renderSynopsis(text, kMap) {
+  const exits=(text.match(/🔴|EXIT/g)||[]).length;
+  const watches=(text.match(/🟡|WATCH/g)||[]).length;
+  const sigCls=exits>0?'sig-exit':watches>0?'sig-watch':'sig-hold';
+  const sigTxt=exits>0?'⚠ ACTION NEEDED':watches>0?'👁 WATCHING':'✓ HOLD';
+  const pnl=positions.reduce((s,p)=>{const k=kMap[p.ticker];if(k&&p.entry&&p.contracts)return s+(k.last-p.entry)*p.contracts*.01;return s;},0);
+  document.getElementById('synArea').innerHTML=`<div class="syn">
+    <div class="syn-title">🤖 AI Synopsis — ${new Date().toLocaleTimeString()}</div>
+    <div class="sig ${sigCls}">${sigTxt}</div>
+    <div style="font-size:12px;color:var(--t3);margin-bottom:10px;">${positions.length} positions · Unrealized P&L: <span style="color:${pnl>=0?'var(--ok)':'var(--err)'};font-weight:700;">${pnl>=0?'+':''}$${Math.abs(pnl).toFixed(2)}</span></div>
+    <div style="white-space:pre-wrap;line-height:1.9;font-size:12px;">${text.replace(/🟢/g,'<span style="color:var(--ok);">🟢</span>').replace(/🟡/g,'<span style="color:var(--warn);">🟡</span>').replace(/🔴/g,'<span style="color:var(--err);">🔴</span>')}</div>
+    <div style="margin-top:10px;font-size:10px;color:var(--t3);">⚡ Paste into TempTrader project for deeper analysis with screenshots.</div>
+  </div>`;
+}
+
+// ================================================================
+// ORDERS TAB
+// ================================================================
+async function loadOrders() {
+  const sp=document.getElementById('ordSpin'),btn=document.getElementById('ordBtn');
+  btn.disabled=true; sp.style.display='inline-block';
+  try {
+    const d=await kGet('/portfolio/orders?status=resting&limit=50');
+    const orders=d.orders||[];
+    const el=document.getElementById('ordList');
+    if(!orders.length){el.innerHTML='<div style="color:var(--t3);font-size:12px;">No open orders.</div>';return;}
+    el.innerHTML=orders.map(o=>{
+      const yp=parseFloat(o.yes_price||0);
+      const rc=parseFloat(o.remaining_count_fp||o.remaining_count||0);
+      const created=new Date(o.created_time).toLocaleString();
+      const sub=o.ticker.split('-').slice(2).join('-');
+      const series=o.ticker.split('-')[0];
+      const icao=SMAP[series]||'?';
+      return `<div class="ord">
+        <span class="badge ${o.side==='yes'?'bg':'br'}">${(o.action||o.side||'?').toUpperCase()}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;">${icao} <span style="color:var(--info);">${sub}</span></div>
+          <div style="font-size:10px;color:var(--t3);">${o.ticker}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-weight:700;color:var(--warn);">${rc.toFixed(0)} contracts @ ${yp.toFixed(0)}¢</div>
+          <div style="font-size:10px;color:var(--t3);">${created}</div>
+        </div>
+        <button class="btn btn-e btn-sm" onclick="cancelOrder('${o.order_id}')">Cancel</button>
+      </div>`;
+    }).join('');
+    // Also update balance
+    const bal=await kGet('/portfolio/balance');
+    cachedBalance=(bal.balance/100).toFixed(2); cachedPortfolio=(bal.portfolio_value/100).toFixed(2);
+    document.getElementById('balVal').textContent='$'+cachedBalance;
+    document.getElementById('portVal').textContent='$'+cachedPortfolio;
+  } catch(e){document.getElementById('ordList').innerHTML=`<span style="color:var(--err);">✗ ${e.message}</span>`;}
+  btn.disabled=false; sp.style.display='none';
+}
+
+async function loadFills() {
+  try {
+    const d=await kGet('/portfolio/fills?limit=20');
+    const fills=d.fills||[];
+    const el=document.getElementById('fillList');
+    if(!fills.length){el.innerHTML='<div style="color:var(--t3);font-size:12px;">No recent fills.</div>';return;}
+    el.innerHTML=fills.map(f=>{
+      const yp=parseFloat(f.yes_price||0);
+      const cnt=parseFloat(f.count_fp||f.count||0);
+      const sub=f.ticker.split('-').slice(2).join('-');
+      const series=f.ticker.split('-')[0];
+      const icao=SMAP[series]||'?';
+      const t=new Date(f.created_time).toLocaleTimeString();
+      return `<div class="ord">
+        <span class="badge ${f.action==='buy'?'bg':'bw'}">${(f.action||'?').toUpperCase()}</span>
+        <div style="flex:1;">
+          <span style="font-weight:700;">${icao}</span> <span style="color:var(--info);">${sub}</span>
+          <span style="color:var(--t3);font-size:10px;margin-left:6px;">${f.ticker.slice(0,35)}</span>
+        </div>
+        <div style="text-align:right;font-size:12px;">
+          <span style="font-weight:700;color:var(--warn);">${cnt.toFixed(0)} @ ${yp.toFixed(0)}¢</span>
+          <span style="color:var(--t3);font-size:10px;margin-left:6px;">${t}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e){document.getElementById('fillList').innerHTML=`<span style="color:var(--err);">✗ ${e.message}</span>`;}
+}
+
+// ================================================================
+// SCAN TAB
+// ================================================================
+async function runScan(ft) {
+  const btn=document.getElementById('scanBtn'),sp=document.getElementById('scanSpin'),stat=document.getElementById('scanStat');
+  btn.disabled=true; sp.style.display='inline-block'; stat.textContent='Scanning...';
+  document.getElementById('scanGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:28px;color:var(--t3);"><span class="spin"></span> Fetching all cities...</div>';
+  const list=ft?SCAN_LIST.filter(x=>CCFG[x.icao]?.type===ft):SCAN_LIST;
+  const res={};
+  let done=0;
+  await Promise.all(list.map(async({series,icao})=>{
+    try {
+      const today=new Date(), ds=`${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+      const [mkd,csv]=await Promise.all([fetch(`${BASE}/markets?series_ticker=${series}&status=open&limit=15`).then(r=>r.json()),fetch(iemUrl(icao)).then(r=>r.text())]);
+      let mkts=(mkd.markets||[]).filter(m=>m.event_ticker.includes(ds));
+      if(!mkts.length) mkts=(mkd.markets||[]).filter(m=>m.status!=='settled').slice(0,10);
+      res[icao]={mkts,iem:parseIEM(csv),series};
+    } catch(e){res[icao]={mkts:[],iem:[],series,err:e.message};}
+    stat.textContent=`Scanning... ${++done}/${list.length}`;
+  }));
+  renderScan(res);
+  btn.disabled=false; sp.style.display='none';
+  stat.innerHTML=`<span class="live"><span class="ldot"></span>Updated ${new Date().toLocaleTimeString()}</span>`;
+}
+
+function renderScan(res) {
+  const order=['smooth','marine','coastal','storm'];
+  const sorted=Object.entries(res).sort(([a],[b])=>{
+    const ta=order.indexOf(CCFG[a]?.type||'smooth'), tb=order.indexOf(CCFG[b]?.type||'smooth');
+    return ta!==tb?ta-tb:a.localeCompare(b);
+  });
+  const typBadge={smooth:'<span class="badge bb" style="font-size:9px;">SMOOTH</span>',marine:'<span class="badge bi" style="font-size:9px;">MARINE</span>',coastal:'<span class="badge bp" style="font-size:9px;">COASTAL</span>',storm:'<span class="badge br" style="font-size:9px;">STORM</span>'};
+  document.getElementById('scanGrid').innerHTML=sorted.map(([icao,{mkts,iem,series,err}])=>{
+    const city=CCFG[icao]; if(!city) return '';
+    const r=iem[0],prev=iem[1];
+    let tc='fl',ti='→';
+    if(r&&prev){const d=r.tmpf-prev.tmpf;if(d>.5){tc='up';ti='↑';}else if(d<-.5){tc='dn';ti='↓';}}
+    // Use bid price (current live probability) not last trade (stale)
+    const fav=mkts.sort((a,b)=>parseFloat(b.yes_bid_dollars||b.last_price_dollars||0)-parseFloat(a.yes_bid_dollars||a.last_price_dollars||0))[0];
+    const favCents=fav?Math.round(parseFloat(fav.yes_bid_dollars||fav.last_price_dollars||0)*100):0;
+    const favSub=fav?.yes_sub_title||fav?.subtitle||'—';
+    const buyZone=mkts.filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
+    const flags=[];
+    if(r&&EAST.has(icao)&&isEw(r.drct)) flags.push('<span class="badge bw" style="font-size:9px;">⚠ E-WIND</span>');
+    if(r&&city.type==='marine'&&isMCap(r.skyc1,r.skyl1)) flags.push('<span class="badge bi" style="font-size:9px;">⚠ MARINE CAP</span>');
+    if(buyZone>0) flags.push(`<span class="badge bg" style="font-size:9px;">⭐ ${buyZone} BUY ZONE</span>`);
+    return `<div class="sc ${city.type}" onclick="jumpToMkt('${series}','${icao}','${city.type}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+        <div><div style="font-weight:700;font-size:12px;">${city.n}</div><div style="font-size:10px;color:var(--t3);">${icao}</div></div>
+        ${typBadge[city.type]||''}
+      </div>
+      ${r?`<div style="display:flex;align-items:flex-end;gap:7px;">
+        <div class="mp ${tc}" style="font-size:22px;">${r.tmpf.toFixed(1)}°F ${ti}</div>
+        <div style="font-size:10px;color:${r._stale?'var(--err)':'var(--t3)'};">${r.valid.slice(11,16)}${r._stale?' ⚠STALE':''}</div>
+      </div>
+      <div style="font-size:11px;color:var(--t2);margin-top:3px;">💨 ${wdir(r.drct)} ${r.sknt?Math.round(r.sknt)+'kt':''} ${r.skyc1&&r.skyc1!=='M'?'· ☁'+r.skyc1:''}</div>`:'<div style="color:var(--t3);font-size:11px;">No IEM data</div>'}
+      ${fav?`<div style="margin-top:6px;padding:5px 7px;background:var(--s2);border-radius:4px;font-size:11px;">
+        <span style="color:var(--t2);">${favSub}</span>
+        <span style="float:right;font-weight:700;color:${favCents>=60?'var(--err)':favCents>=30?'var(--warn)':'var(--ok)'};">${favCents}¢</span>
+      </div>`:''}
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${flags.join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+function jumpToMkt(series,icao,type) {
+  const sel=document.getElementById('mkSel');
+  for(let i=0;i<sel.options.length;i++){if(sel.options[i].value.startsWith(series+'|')){sel.selectedIndex=i;break;}}
+  curSeries=series; curICAO=icao; curType=type;
+  showTab('markets',document.querySelector('.tab'));
+  document.querySelectorAll('.tab').forEach((t,i)=>{if(i===0){t.classList.add('active');}else{t.classList.remove('active');}});
+  document.getElementById('tab-markets').classList.add('active');
+  document.querySelectorAll('.panel').forEach((p,i)=>{if(i===0)p.classList.add('active');else p.classList.remove('active');});
+  loadBrackets();
+}
+
+// ================================================================
+// ANALYZE TAB
+// ================================================================
+async function runAFD() {
+  const afd=document.getElementById('azAFD').value.trim();
+  if(!afd){alert('Paste AFD text first.');return;}
+  const cityVal=document.getElementById('azCity').value;
+  const [icao,type]=cityVal.split('|');
+  const city=CCFG[icao]||{n:icao,type};
+  const fav=document.getElementById('azFav').value;
+  const mdl=document.getElementById('azMdl').value;
+  const btn=document.getElementById('azBtn'),sp=document.getElementById('azSpin');
+  btn.disabled=true; sp.style.display='inline-block';
+  const prompt=`You are TempTrader. Analyze this NWS AFD for ${city.n} (${icao}, type:${type}).
+Sell targets: smooth=88-92¢, marine=75¢, coastal=88¢ max, storm=65¢ hard.
+E-wind East Coast: -5 to -8°F discount. Gulf: -2 to -4°F.
+PHX/LAS spring: AFD is floor not ceiling. CLR+SSW+top of range before 3pm = buy bracket above.
+BOS SW advection: high can hit 5-6pm EDT. Never exit before 6pm EDT.
+Kalshi % = last traded price ¢, not consensus.
+${mdl?'Kalshi model: '+mdl+'°F':''}${fav?'\nMarket fav: '+fav:''}
+
+AFD:
+${afd.slice(0,2500)}
+
+Return ONLY valid JSON:
+{"forecastHigh":null_or_number,"forecastRange":"string","windPattern":"string","confidenceLevel":"HIGH|MEDIUM|LOW","swingDayFlag":bool,"eWindFlag":bool,"stormRiskFlag":bool,"marineLayerFlag":bool,"recommendedBracket":"string_or_SKIP","entryPrice":"string","sellTarget":"string","positionSize":"string","reasoning":"2-3 sentences","warnings":["string"]}`;
+  try {
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    const d=await r.json();
+    const raw=d.content?.map(b=>b.text||'').join('')||'{}';
+    const a=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderAFDResult(a,city,type);
+  } catch(e){localAFD();}
+  btn.disabled=false; sp.style.display='none';
+}
+
+function renderAFDResult(a,city,type) {
+  document.getElementById('azRes').style.display='block';
+  const skip=a.recommendedBracket==='SKIP';
+  const cc=a.confidenceLevel==='HIGH'?'var(--ok)':a.confidenceLevel==='LOW'?'var(--err)':'var(--warn)';
+  const cp=a.confidenceLevel==='HIGH'?82:a.confidenceLevel==='LOW'?28:55;
+  document.getElementById('azCard').innerHTML=`<div class="ctit">${city.n} — AFD Analysis</div>`+
+    [['Forecast',a.forecastHigh?a.forecastHigh+'°F':(a.forecastRange||'—'),'var(--warn)'],
+     ['Wind',a.windPattern||'—','var(--t2)'],
+     ['Bracket',a.recommendedBracket||'—',skip?'var(--err)':'var(--ok)'],
+     ['Entry',a.entryPrice||'—','var(--ac)'],
+     ['Sell Target',a.sellTarget||SELL[type]?.v||'—','var(--gold)'],
+     ['Size',a.positionSize||'—','var(--t1)']
+    ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--b1);font-size:12px;"><span style="color:var(--t3);font-size:11px;">${l}</span><span style="font-weight:700;color:${c};">${v}</span></div>`).join('');
+  document.getElementById('azConf').innerHTML=`<div class="clbl">Confidence</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;"><span style="font-size:16px;font-weight:700;color:${cc};">${a.confidenceLevel}</span><span style="color:var(--t3);font-size:11px;">${cp}%</span></div><div class="cbar-w"><div class="cbar" style="width:${cp}%;background:${cc};"></div></div>`;
+  let flags='';
+  if(a.swingDayFlag) flags+=`<div class="alert aw"><span class="ai">⚠</span><div><b>SWING DAY</b> — Use threshold brackets.</div></div>`;
+  if(a.eWindFlag) flags+=`<div class="alert aw"><span class="ai">🌬</span><div><b>E-WIND</b> — Apply 5-8°F discount.</div></div>`;
+  if(a.stormRiskFlag) flags+=`<div class="alert ad"><span class="ai">⛈</span><div><b>STORM RISK</b> — 65¢ ceiling, exit noon.</div></div>`;
+  if(a.marineLayerFlag) flags+=`<div class="alert ain"><span class="ai">🌫</span><div><b>MARINE LAYER</b> — 9am IEM check required.</div></div>`;
+  if(a.warnings?.length) a.warnings.forEach(w=>{flags+=`<div class="alert aw"><span class="ai">⚠</span><div>${w}</div></div>`;});
+  document.getElementById('azFlags').innerHTML=flags||'<div style="color:var(--t2);font-size:12px;">No flags.</div>';
+  if(a.reasoning){document.getElementById('azReas').style.display='block';document.getElementById('azReas').textContent=a.reasoning;}
+}
+
+function localAFD() {
+  const text=document.getElementById('azAFD').value.toLowerCase();
+  const [icao,type]=document.getElementById('azCity').value.split('|');
+  const city=CCFG[icao]||{n:icao};
+  if(!text.trim()){alert('Paste AFD first.');return;}
+  document.getElementById('azRes').style.display='block';
+  let conf=60,flags='',swing=false;
+  const chk=(kws,fn)=>kws.forEach(kw=>{if(text.includes(kw))fn(kw);});
+  chk(['large temperature swings','backdoor front','wide temp range','temperature swing'],kw=>{swing=true;flags+=`<div class="alert aw"><span class="ai">⚠</span><div><b>SWING DAY</b>: "${kw}" — threshold brackets only.</div></div>`;});
+  chk(['afternoon storms','convection','scattered showers'],kw=>{flags+=`<div class="alert ad"><span class="ai">⛈</span><div><b>STORM RISK</b>: "${kw}"</div></div>`;conf-=15;});
+  chk(['marine layer','stratus','onshore flow'],kw=>{flags+=`<div class="alert ain"><span class="ai">🌫</span><div><b>MARINE</b>: "${kw}" — check 9am IEM.</div></div>`;conf-=10;});
+  chk(['easterly','east winds','ene','ese'],kw=>{flags+=`<div class="alert aw"><span class="ai">🌬</span><div><b>E-WIND</b>: "${kw}" — 5-8°F discount.</div></div>`;conf-=8;});
+  chk(['high pressure','ridge','clear skies'],kw=>{flags+=`<div class="alert as"><span class="ai">☀</span><div><b>STABLE</b>: "${kw}" — smooth sailing.</div></div>`;conf+=10;});
+  conf=Math.max(10,Math.min(95,conf));
+  const cc=conf>=70?'var(--ok)':conf>=45?'var(--warn)':'var(--err)';
+  const cl=conf>=70?'HIGH':conf>=45?'MEDIUM':'LOW';
+  document.getElementById('azCard').innerHTML=`<div class="ctit">${city.n} — Local Analysis</div><div style="padding:6px 0;font-size:12px;color:var(--t2);">Swing day: <b style="color:${swing?'var(--err)':'var(--ok)'}">${swing?'YES':'No'}</b> · Sell: <b style="color:var(--gold);">${SELL[type]?.v||'—'}</b></div>`;
+  document.getElementById('azConf').innerHTML=`<div class="clbl">Confidence</div><div style="font-size:16px;font-weight:700;color:${cc};margin-bottom:5px;">${conf}% — ${cl}</div><div class="cbar-w"><div class="cbar" style="width:${conf}%;background:${cc};"></div></div>`;
+  document.getElementById('azFlags').innerHTML=flags||'<div style="color:var(--t2);font-size:12px;">No flags detected.</div>';
+  document.getElementById('azReas').style.display='none';
+}
+
+async function fetchMETAR() {
+  const [icao]=document.getElementById('azCity').value.split('|');
+  const stat=document.getElementById('azMetStat');
+  stat.textContent='Fetching...';
+  try {
+    // Fetch METAR and TAF in parallel - decoded endpoint doesn't include TAF inline
+    const [metarRes, tafRes] = await Promise.all([
+      fetch(`/api/avwx/metar?ids=${icao}&format=decoded`),
+      fetch(`/api/avwx/taf?ids=${icao}&format=raw`)
+    ]);
+    const metarText = await metarRes.text();
+    const tafText = await tafRes.text();
+
+    document.getElementById('azMetBox').textContent = metarText.slice(0,600) || 'No METAR data.';
+    document.getElementById('azTafBox').textContent = tafText.slice(0,500) || 'No TAF available.';
+
+    const tm=metarText.match(/Temperature:\s*([\d.]+)\s*C\s*\(([\d.]+)\s*F\)/i);
+    stat.innerHTML=tm?`<span style="color:var(--ok);">✓ ${parseFloat(tm[2]).toFixed(1)}°F</span>`:'<span style="color:var(--ok);">✓ Received</span>';
+    if(icao==='KNYC'){const tf=metarText.match(/T\d{8}/);if(tf)document.getElementById('tfIn').value=tf[0];}
+  } catch(e){document.getElementById('azMetBox').textContent='Error: '+e.message;stat.innerHTML='<span style="color:var(--err);">✗</span>';}
+}
+
+function parseTF() {
+  const raw=document.getElementById('tfIn').value.trim();
+  const bnd=parseFloat(document.getElementById('tfBnd').value)||null;
+  const el=document.getElementById('tfOut');
+  const m=raw.match(/T(\d)(\d{3})(\d)(\d{3})/);
+  if(!m){el.style.display=raw.length>3?'block':'none';if(raw.length>3)el.textContent='Invalid format. Expected: T02610128';return;}
+  const tC=(m[1]==='1'?-1:1)*+m[2]/10, tF=tC*9/5+32;
+  const dC=(m[3]==='1'?-1:1)*+m[4]/10, dF=dC*9/5+32;
+  let bHtml='';
+  if(bnd!==null){
+    const bC=(bnd-32)*5/9, diff=Math.abs(tC-bC), diffF=Math.abs(tF-bnd);
+    if(diff<=0.15) bHtml=`<div style="color:var(--err);font-weight:700;margin-top:6px;">🚨 TRUE COIN FLIP — within 0.1°C of boundary. MAX 25 CONTRACTS. (Apr 15 SEA rule)</div>`;
+    else if(diff<=0.5) bHtml=`<div style="color:var(--err);margin-top:6px;">⚠ BOUNDARY RISK — ${diff.toFixed(1)}°C from ${bnd}°F. Reduce size.</div>`;
+    else if(tF<bnd) bHtml=`<div style="color:var(--ok);margin-top:6px;">✓ SAFE — ${tF.toFixed(2)}°F is ${diffF.toFixed(1)}°F BELOW ${bnd}°F.</div>`;
+    else bHtml=`<div style="color:var(--err);margin-top:6px;">⚠ OVER — ${tF.toFixed(2)}°F is ${diffF.toFixed(1)}°F ABOVE ${bnd}°F.</div>`;
+  }
+  el.style.display='block';
+  el.innerHTML=`<div style="font-size:10px;color:var(--t3);margin-bottom:4px;">T-field: ${raw}</div>
+    <div><span style="font-size:20px;font-weight:700;color:var(--warn);">${tC.toFixed(1)}°C</span><span style="color:var(--t2);margin-left:8px;">= ${tF.toFixed(2)}°F → rounds to <b>${Math.round(tF)}°F</b></span></div>
+    <div style="font-size:11px;color:var(--t2);margin-top:3px;">Dew: ${dC.toFixed(1)}°C (${dF.toFixed(1)}°F)</div>
+    ${bHtml}
+    <div style="font-size:10px;color:var(--t3);margin-top:7px;">Hourly ASOS (:51): trustworthy. 5-min ASOS: coin flip ambiguity (mrage + skier219 rules)</div>`;
+}
+
+// ================================================================
+// MONITOR TAB
+// ================================================================
+let monRdgs=[];
+let monManRdgs=[];
+let iemAuto=false;
+
+function onMonChange() {
+  const icao=document.getElementById('monSt').value;
+  const city=CCFG[icao];
+  if(city){document.getElementById('monType').value=city.type;updSell();}
+}
+function updSell() {
+  const type=document.getElementById('monType').value;
+  const st=SELL[type]||SELL.smooth;
+  document.getElementById('monSell').textContent=st.v;
+  document.getElementById('monSellN').textContent=st.n;
+}
+updSell();
+
+async function fetchIEM() {
+  const icao=document.getElementById('monSt').value;
+  const sp=document.getElementById('iemSpin'),stat=document.getElementById('monStat');
+  sp.style.display='inline-block'; stat.textContent='Fetching...';
+  try {
+    const csv=await fetch(iemUrl(icao)).then(r=>r.text());
+    const rows=parseIEM(csv);
+    if(!rows.length) throw new Error('No readings returned');
+    monRdgs=rows;
+    renderMonHist(rows);
+    calcSig();
+    chkMonFlags(rows[0],icao);
+    stat.innerHTML=`<span style="color:var(--ok);">✓ ${rows[0].tmpf.toFixed(1)}°F @ ${rows[0].valid.slice(11,16)}</span> <span class="live"><span class="ldot"></span>Live</span>`;
+    if(icao==='KNYC') chkNYC(rows[0].tmpf);
+  } catch(e){stat.innerHTML=`<span style="color:var(--err);">✗ ${e.message}</span>`;}
+  sp.style.display='none';
+}
+
+async function fetchMetarMon() {
+  const icao=document.getElementById('monSt').value;
+  const stat=document.getElementById('monStat');
+  stat.textContent='Fetching METAR...';
+  try {
+    const res=await fetch(`/api/avwx/metar?ids=${icao}&format=decoded`);
+    const text=await res.text();
+    const tm=text.match(/Temperature:\s*([\d.]+)\s*C\s*\(([\d.]+)\s*F\)/i);
+    const wm=text.match(/Wind:\s*([^\n]+)/i);
+    const gm=text.match(/gusts?\s+to\s+(\d+)/i);
+    if(tm){
+      const f=parseFloat(tm[2]),w=wm?wm[1].trim().slice(0,35):'',g=gm?+gm[1]:null;
+      monManRdgs.unshift({time:new Date().toLocaleTimeString(),tempF:f,wind:w,gusts:g});
+      if(monManRdgs.length>10)monManRdgs.pop();
+      renderManHist(); calcSigFrom(monManRdgs.map(r=>({tmpf:r.tempF,sknt:null})));
+      stat.innerHTML=`<span style="color:var(--ok);">✓ METAR: ${f.toFixed(1)}°F</span>`;
+    }else stat.innerHTML=`<span style="color:var(--warn);">⚠ No temp parsed</span>`;
+  }catch(e){stat.innerHTML=`<span style="color:var(--err);">✗ ${e.message}</span>`;}
+}
+
+function toggleIEMAuto() {
+  const btn=document.getElementById('iemAutoBtn');
+  iemAuto=!iemAuto;
+  if(iemAuto){iemAutoInt=setInterval(fetchIEM,5*60*1000);btn.textContent='⏸ Stop Auto';btn.classList.add('btn-w');fetchIEM();}
+  else{clearInterval(iemAutoInt);btn.textContent='▶ Auto 5min';btn.classList.remove('btn-w');}
+}
+
+function renderMonHist(rows) {
+  const el=document.getElementById('monHist');
+  const last=rows.slice(0,6);
+  el.innerHTML=last.map((r,i)=>{
+    let tc='fl',ti='→';
+    if(i<last.length-1){const d=r.tmpf-last[i+1].tmpf;if(d>.5){tc='up';ti='↑';}else if(d<-.5){tc='dn';ti='↓';}}
+    const wind=r.drct!==null?`${wdir(r.drct)} ${r.sknt?Math.round(r.sknt)+'kt':''}`:' ';
+    const sky=r.skyc1&&r.skyc1!=='M'?` ${r.skyc1}${r.skyl1?'@'+Math.round(r.skyl1)+'\'':''}`:' ';
+    return `<div class="mrow ${i===0?'lat':''}">
+      <span class="mt">${r.valid?r.valid.slice(11,16):'—'}</span>
+      <span class="mp ${tc}">${r.tmpf.toFixed(1)}°F</span>
+      <span class="mw">${wind}</span><span class="mw" style="color:var(--t3);">${sky}</span>
+      ${i===0?'<span class="badge bb" style="margin-left:4px;font-size:9px;">LATEST</span>':''}
+      <span class="mtr">${ti}</span>
+    </div>`;
+  }).join('');
+  // Gust check
+  if(last.length>=3){
+    const sw=Math.max(...last.slice(0,3).map(r=>r.tmpf))-Math.min(...last.slice(0,3).map(r=>r.tmpf));
+    document.getElementById('monGust').innerHTML=sw>3
+      ?`<span style="color:var(--warn);">⚠ SPIKE: ${sw.toFixed(1)}°F swing — 1 spike=HOLD, 2 consec=EXIT (OKC rule). Never add after spike.</span>`
+      :`<span style="color:var(--ok);">✓ No spike (${sw.toFixed(1)}°F range)</span>`;
+  }
+}
+
+function chkMonFlags(r,icao) {
+  const ew=document.getElementById('monEw'),ewm=document.getElementById('monEwMsg');
+  if(r&&EAST.has(icao)&&isEw(r.drct)){ew.style.display='flex';ewm.textContent=`${wdir(r.drct)} ${r.sknt?Math.round(r.sknt)+'kt':''} — Apply 5–8°F discount to AFD.`;}
+  else ew.style.display='none';
+}
+
+function calcSig() {
+  if(!monRdgs.length) return;
+  calcSigFrom(monRdgs.slice(0,6).map(r=>({tmpf:r.tmpf,sknt:r.sknt})));
+}
+function calcSigFrom(rdgs) {
+  const lo=parseFloat(document.getElementById('monLo').value);
+  const hi=parseFloat(document.getElementById('monHi').value);
+  const type=document.getElementById('monType').value;
+  const sig=document.getElementById('monSig'),note=document.getElementById('monNote'),rev=document.getElementById('monRev');
+  if(!rdgs.length||isNaN(lo)||isNaN(hi)){sig.className='sig sig-wait';sig.textContent='Enter bracket bounds';note.textContent='';return;}
+  const latest=rdgs[0].tmpf;
+  const inB=latest>=lo&&latest<hi, above=latest>=hi;
+  let revDet=false;
+  if(rdgs.length>=3){const drop=rdgs[0].tmpf-rdgs[2].tmpf;const wu=rdgs[0].sknt!==null&&rdgs[2].sknt!==null&&rdgs[0].sknt>rdgs[2].sknt+2;if(drop<=-2&&(wu||drop<=-3))revDet=true;}
+  rev.style.display=revDet?'flex':'none';
+  const st=SELL[type]||SELL.smooth;
+  let s,cls,n;
+  if(above){s='BUSTED — Above Bracket';cls='sig-exit';n=`${latest.toFixed(1)}°F ABOVE ${hi}°F ceiling. Check if market repriced. Verify: is this still heating or gust spike?`;}
+  else if(inB){s='✓ IN BRACKET — Hold';cls='sig-hold';n=`${latest.toFixed(1)}°F inside ${lo}–${hi}°F. Target: ${st.v}. ${st.n}`;}
+  else{s='BELOW — Waiting';cls='sig-wait';n=`${latest.toFixed(1)}°F below ${lo}°F floor. Needs +${(lo-latest).toFixed(1)}°F. Is peak heating window still open?`;}
+  if(revDet){s='⚠ REVERSAL — Consider Exit';cls='sig-exit';}
+  sig.className=`sig ${cls}`; sig.textContent=s; note.textContent=n;
+}
+
+function chkNYC(tmpf) {
+  const hi=parseFloat(document.getElementById('monHi').value);
+  const el=document.getElementById('monNYC'),msg=document.getElementById('monNYCMsg');
+  if(isNaN(hi)){el.style.display='none';return;}
+  if(Math.abs(tmpf-hi)<=1.5){el.style.display='flex';msg.textContent=`NYC BOUNDARY: ${tmpf.toFixed(1)}°F is within 1.5°F of ${hi}°F boundary. Single hourly reading triggers resolution. NEVER trade NYC at boundary.`;}
+  else el.style.display='none';
+}
+
+function addMan(){
+  const t=document.getElementById('manT').value.trim();
+  const f=parseFloat(document.getElementById('manF').value);
+  const w=document.getElementById('manW').value.trim();
+  if(!t||isNaN(f))return;
+  monManRdgs.unshift({time:t,tempF:f,wind:w,gusts:null});
+  if(monManRdgs.length>10)monManRdgs.pop();
+  ['manT','manF','manW'].forEach(id=>document.getElementById(id).value='');
+  renderManHist(); calcSigFrom(monManRdgs.map(r=>({tmpf:r.tempF,sknt:null})));
+}
+function clearMan(){monManRdgs=[];renderManHist();}
+function renderManHist(){
+  const el=document.getElementById('manHist');
+  if(!monManRdgs.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;">No manual readings.</div>';return;}
+  el.innerHTML=monManRdgs.slice(0,3).map((r,i)=>{
+    let tc='fl',ti='→';
+    if(i<monManRdgs.length-1){const d=r.tempF-monManRdgs[i+1].tempF;if(d>.5){tc='up';ti='↑';}else if(d<-.5){tc='dn';ti='↓';}}
+    return `<div class="mrow ${i===0?'lat':''}"><span class="mt">${r.time}</span><span class="mp ${tc}">${r.tempF.toFixed(1)}°F</span><span class="mw">${r.wind||'—'}</span><span class="mtr">${ti}</span></div>`;
+  }).join('');
+}
+
+// ================================================================
+// NWS AFD AUTO-FETCH (api.weather.gov has CORS * - no proxy needed)
+// ================================================================
+async function fetchAFDForWFO(wfo) {
+  // NWS API requires a User-Agent header - requests without it get throttled/blocked
+  const nwsHeaders = {
+    'User-Agent': 'TempTrader/3.1 Weather Market Tool (github.com/temptrader)',
+    'Accept': 'application/json'
+  };
+
+  // Use AbortController for 8-second timeout
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+
+  try {
+    // Step 1: get latest product ID
+    const listRes = await fetch(
+      `https://api.weather.gov/products/types/AFD/locations/${wfo}`,
+      { headers: nwsHeaders, signal: ctrl.signal }
+    );
+    const listData = await listRes.json();
+    const products = listData['@graph'] || [];
+    if (!products.length) throw new Error(`No AFD for ${wfo}`);
+    const latestUrl = products[0]['@id'];
+    const issuedAt = products[0]['issuanceTime']?.slice(0,16) || '?';
+
+    // Step 2: get actual product text
+    const prodRes = await fetch(latestUrl, { headers: nwsHeaders, signal: ctrl.signal });
+    const prodData = await prodRes.json();
+    const text = prodData.productText || '';
+    clearTimeout(timer);
+    return { text, issuedAt };
+  } catch(e) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') throw new Error(`${wfo} AFD timed out`);
+    throw e;
+  }
+}
+
+async function autoFetchAFD() {
+  const cityVal = document.getElementById('azCity').value;
+  const [icao] = cityVal.split('|');
+  const city = CCFG[icao];
+  const btn = document.getElementById('afdFetchBtn');
+  const spin = document.getElementById('afdFetchSpin');
+  const stat = document.getElementById('afdFetchStat');
+  const textarea = document.getElementById('azAFD');
+
+  if (!city?.wfo) { stat.textContent = 'No WFO code for this city.'; return; }
+
+  btn.disabled = true; spin.style.display = 'inline-block';
+  stat.innerHTML = `<span style="color:var(--t2);">Fetching ${city.wfo} AFD...</span>`;
+
+  try {
+    const { text, issuedAt } = await fetchAFDForWFO(city.wfo);
+    textarea.value = text;
+    stat.innerHTML = `<span style="color:var(--ok);">✓ ${city.wfo} AFD loaded — issued ${issuedAt} UTC</span>`;
+  } catch(e) {
+    stat.innerHTML = `<span style="color:var(--err);">✗ ${e.message}</span>`;
+  }
+  btn.disabled = false; spin.style.display = 'none';
+}
+
+// ================================================================
+// MORNING BRIEF — Full pipeline: Kalshi + IEM + AFD → Claude
+// ================================================================
+const BRIEF_CITIES = [
+  // SMOOTH SAILING
+  {series:'KXHIGHTPHX',icao:'KPHX',name:'Phoenix',type:'smooth',sell:92,wfo:'PSR'},
+  {series:'KXHIGHTLV',icao:'KLAS',name:'Las Vegas',type:'smooth',sell:92,wfo:'VEF'},
+  {series:'KXHIGHTATL',icao:'KATL',name:'Atlanta',type:'smooth',sell:92,wfo:'FFC'},
+  {series:'KXHIGHTDAL',icao:'KDFW',name:'Dallas',type:'smooth',sell:92,wfo:'FWD'},
+  {series:'KXHIGHAUS',icao:'KAUS',name:'Austin',type:'smooth',sell:92,wfo:'EWX'},
+  {series:'KXHIGHTSATX',icao:'KSAT',name:'San Antonio',type:'smooth',sell:92,wfo:'EWX'},
+  {series:'KXHIGHTOKC',icao:'KOKC',name:'OKC',type:'smooth',sell:92,wfo:'OUN'},
+  {series:'KXHIGHDEN',icao:'KDEN',name:'Denver',type:'smooth',sell:88,wfo:'BOU'},
+  // MARINE
+  {series:'KXHIGHTSEA',icao:'KSEA',name:'Seattle',type:'marine',sell:75,wfo:'SEW'},
+  {series:'KXHIGHLAX',icao:'KLAX',name:'Los Angeles',type:'marine',sell:75,wfo:'LOX'},
+  {series:'KXHIGHTSFO',icao:'KSFO',name:'San Francisco',type:'marine',sell:75,wfo:'MTR'},
+  // COASTAL SWING
+  {series:'KXHIGHNY',icao:'KNYC',name:'New York',type:'coastal',sell:88,wfo:'OKX'},
+  {series:'KXHIGHTBOS',icao:'KBOS',name:'Boston',type:'coastal',sell:88,wfo:'BOX'},
+  {series:'KXHIGHTDC',icao:'KDCA',name:'DC',type:'coastal',sell:88,wfo:'LWX'},
+  {series:'KXHIGHPHIL',icao:'KPHL',name:'Philadelphia',type:'coastal',sell:88,wfo:'PHI'},
+  {series:'KXHIGHCHI',icao:'KMDW',name:'Chicago',type:'coastal',sell:88,wfo:'LOT'},
+  {series:'KXHIGHTMIN',icao:'KMSP',name:'Minneapolis',type:'coastal',sell:88,wfo:'MPX'},
+  // STORM
+  {series:'KXHIGHMIA',icao:'KMIA',name:'Miami',type:'storm',sell:65,wfo:'MFL'},
+  {series:'KXHIGHTHOU',icao:'KHOU',name:'Houston',type:'storm',sell:65,wfo:'HGX'},
+  {series:'KXHIGHTNOLA',icao:'KMSY',name:'New Orleans',type:'storm',sell:65,wfo:'LIX'},
+];
+
+async function runMorningBrief() {
+  const btn = document.getElementById('briefBtn');
+  const spin = document.getElementById('briefSpin');
+  const cancelBtn = document.getElementById('briefCancelBtn');
+  const out = document.getElementById('briefOut');
+  window._briefAbort = false;
+  btn.disabled = true;
+  spin.style.display = 'inline-block';
+  if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+  out.style.display = 'block';
+  out.innerHTML = `<div style="color:var(--t2);font-size:12px;">
+    <span class="spin"></span> Starting... fetching all cities with 6s timeout per API call
+  </div>`;
+
+  const now = new Date();
+  const yest = new Date(now); yest.setDate(yest.getDate()-1);
+  const y1=yest.getFullYear(),m1=yest.getMonth()+1,d1=yest.getDate();
+  const y2=now.getFullYear(),m2=now.getMonth()+1,d2=now.getDate();
+  const todayDs = `${y2}${String(m2).padStart(2,'0')}${String(d2).padStart(2,'0')}`;
+
+  const cityData = [];
+
+  // Helper: fetch with hard timeout
+  async function fetchWithTimeout(url, opts={}, ms=6000) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try {
+      const r = await fetch(url, {...opts, signal: ctrl.signal});
+      clearTimeout(t);
+      return r;
+    } catch(e) {
+      clearTimeout(t);
+      throw e;
+    }
+  }
+
+  out.innerHTML = `<div style="color:var(--t2);font-size:12px;"><span class="spin"></span> Fetching ${BRIEF_CITIES.length} cities: Kalshi + IEM + AFDs (6s timeout per city)...</div>`;
+
+  let briefDone = 0;
+  window._briefAbort = false; // allow cancellation
+
+  for (const city of BRIEF_CITIES) {
+    if (window._briefAbort) break;
+    try {
+      const c = CCFG[city.icao];
+      if (!c) { briefDone++; continue; }
+
+      out.innerHTML = `<div style="color:var(--t2);font-size:12px;"><span class="spin"></span> ${city.name} (${briefDone+1}/${BRIEF_CITIES.length}) — ${cityData.length} collected so far</div>`;
+
+      // Kalshi brackets — 5s timeout
+      let mkts = [];
+      try {
+        const mkRes = await fetchWithTimeout(`${BASE}/markets?series_ticker=${city.series}&status=open&limit=12`, {}, 5000);
+        const mkData = await mkRes.json();
+        mkts = (mkData.markets||[]).filter(m => m.event_ticker.includes(todayDs));
+        if (!mkts.length) mkts = (mkData.markets||[]).filter(m => m.status !== 'settled').slice(0,8);
+        mkts.sort((a,b) => parseFloat(b.yes_bid_dollars||b.last_price_dollars||0)-parseFloat(a.yes_bid_dollars||a.last_price_dollars||0));
+      } catch(e) { console.log(`${city.icao} Kalshi:`, e.message); }
+
+      // 400ms gap between cities (was 600ms — reduce total time)
+      await new Promise(r => setTimeout(r, 400));
+
+      // IEM live data — direct fetch, 5s timeout
+      let iemRows = [];
+      try {
+        const iemRes = await fetchWithTimeout(iemUrl(city.icao), {}, 5000);
+        const csv = await iemRes.text();
+        iemRows = parseIEM(csv);
+      } catch(e) { console.log(`${city.icao} IEM:`, e.message); }
+
+      // AFD from NWS API — 7s timeout (NWS can be slow)
+      let afdText = '', afdIssued = '';
+      try {
+        const { text, issuedAt } = await fetchAFDForWFO(city.wfo);
+        const lines = text.split('\n');
+        let capture = false, afdLines = [];
+        for (const line of lines) {
+          if (/\.(SHORT TERM|NEAR TERM|UPDATE)/i.test(line)) capture = true;
+          else if (capture && /^\.[A-Z]/.test(line) && !/\.(SHORT TERM|NEAR TERM|UPDATE)/i.test(line)) break;
+          if (capture) afdLines.push(line);
+        }
+        afdText = afdLines.join('\n').slice(0, 800);
+        afdIssued = issuedAt;
+      } catch(e) { console.log(`${city.icao} AFD:`, e.message); }
+
+      cityData.push({
+        name: city.name, icao: city.icao, type: city.type, sell: city.sell,
+        brackets: mkts.slice(0,7),
+        iem: iemRows.slice(0,4),
+        afd: afdText,
+        afdIssued,
+      });
+    } catch(e) {
+      console.log(`Brief outer ${city.icao}:`, e.message);
+    }
+    briefDone++;
+  }
+
+  out.innerHTML = `<div style="color:var(--t2);font-size:12px;"><span class="spin"></span> Step 2/3: Building analysis payload (${cityData.length} cities)...</div>`;
+
+  // Build the data payload for Claude
+  const typeOrder = ['smooth','marine','coastal','storm'];
+  cityData.sort((a,b) => typeOrder.indexOf(a.type)-typeOrder.indexOf(b.type));
+
+  const now_pst = new Date().toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'2-digit',minute:'2-digit',hour12:true});
+
+  let dataBlock = cityData.map(city => {
+    const latest = city.iem[0];
+    const prev = city.iem[1];
+    const tempTrend = latest && prev ? (latest.tmpf > prev.tmpf ? '↑' : latest.tmpf < prev.tmpf ? '↓' : '→') : '?';
+    const windDir = latest?.drct !== null ? wdir(latest.drct) : '?';
+    const windSpd = latest?.sknt !== null ? Math.round(latest.sknt)+'kt' : '?';
+    const sky = latest?.skyc1 || '?';
+    const ewind = latest && EAST.has(city.icao) && isEw(latest.drct) ? ' ⚠E-WIND' : '';
+    const marineCap = latest && city.type==='marine' && isMCap(latest.skyc1,latest.skyl1) ? ' ⚠MARINE-CAP' : '';
+
+    const bracketLines = city.brackets.map(m => {
+      const cents = Math.round(parseFloat(m.last_price_dollars||0)*100);
+      const bid = Math.round(parseFloat(m.yes_bid_dollars||0)*100);
+      const ask = Math.round(parseFloat(m.yes_ask_dollars||0)*100);
+      const vol = Math.round(parseFloat(m.volume_fp||0));
+      const sub = m.yes_sub_title||m.subtitle||m.no_sub_title||'?';
+      const zone = cents>=15&&cents<=35?' [BUY ZONE]':cents<15?' [LOTTERY]':cents>=70?' [HIGH]':'';
+      return `  ${sub}: ${cents}¢ (bid:${bid} ask:${ask} vol:${vol})${zone}`;
+    }).join('\n');
+
+    return `${city.name} (${city.icao}) — ${city.type.toUpperCase()} — Sell target: ${city.sell}¢
+Station: ${latest ? `${latest.tmpf.toFixed(1)}°F ${tempTrend} @ ${latest.valid?.slice(11,16)||'?'} | ${windDir} ${windSpd} | ${sky}${ewind}${marineCap}` : 'NO IEM DATA'}
+AFD (${city.afdIssued||'?'} UTC): ${city.afd ? city.afd.replace(/\n+/g,' ').slice(0,500) : 'unavailable'}
+Brackets (Kalshi last price):
+${bracketLines}`;
+  }).join('\n\n');
+
+  // Build Claude prompt
+  const prompt = `You are TempTrader, an expert Kalshi daily temperature bracket analyst. It is ${now_pst} PST. Analyze this live market data and identify the 2-3 best trade opportunities for TODAY.
+
+CORE RULES:
+- Kalshi bid price shown = current live market probability (NOT last trade). Use this as your reference.
+- Never buy above 50¢. Ideal entry: 15-35¢. Above 45¢ = skip unless very high conviction.
+- Smooth sailing cities (PHX,LAS,ATL,DFW,AUS,OKC,SAT,DEN): buy exactly where AFD points, sell 88-92¢. PHX/LAS spring: AFD is FLOOR not ceiling.
+- Marine (SEA,LAX,SFO): check 9am clouds, sell 75¢ max. Skip if MARINE-CAP showing.
+- Coastal (NYC,BOS,DC,PHL,CHI,MSP): sell at 80¢+ before midnight, 88¢ max. NEVER hold overnight.
+- Storm (MIA,HOU,NOLA): hard ceiling 65¢, exit noon local. PREFER SKIP on storm cities.
+- E-WIND detected: apply 5-8°F discount to AFD (2-4°F Gulf cities). THIS IS CRITICAL — E-wind cities often resolve 6-8°F below AFD. Do NOT buy upper brackets on E-wind days.
+- MARINE-CAP (OVC/BKN <1500ft at 9am local): do not buy upper brackets for marine cities.
+- AFD spans 3+ brackets or says "low confidence" = SKIP that city entirely.
+- Two brackets within 1¢ of each other = SKIP (no edge).
+- If IEM station is ALREADY at or above the Kalshi favorite bracket midpoint before 1pm local = consider bracket above as upside play (PHX/LAS spring bias rule).
+- Never size up on a boundary call (station within 1°F of bracket edge). Max 15 contracts.
+- If Open-Meteo peak is BELOW the Kalshi favorite bracket = lower bracket is the play.
+- Only recommend a trade if there is a CLEAR reason the market is wrong. If unsure = SKIP.
+
+LOSS PREVENTION RULES (critical — common errors to avoid):
+- Do NOT recommend a trade just because a bracket is cheap. It must be cheap AND the AFD/IEM clearly points there.
+- Do NOT recommend coastal cities unless AFD is very clean (single temperature point, no range language).
+- Do NOT recommend storm cities unless setup is exceptional and at hard ceiling.
+- Session bankroll ~$50. Recommend 10-20 contracts max per trade, not 50+.
+- If WINDOW CLOSING is flagged = skip that city for late flip. Only morning entries for window-closing cities.
+
+LIVE DATA (${new Date().toLocaleDateString()}):
+${dataBlock}
+
+OUTPUT FORMAT — be specific and actionable:
+
+## 🎯 TOP TRADES
+
+For each trade (max 3):
+**[CITY] [BRACKET] @ [PRICE]¢**
+- Contracts: [N] (based on conviction)
+- Sell target: [X]¢
+- Edge: [1-2 sentences explaining WHY this bracket is underpriced vs where IEM/model actually points]
+- Risk: [one key risk to watch]
+- Watch: [what IEM reading or time trigger to monitor]
+
+## ⚠️ SKIP LIST
+[City]: [one-line reason]
+
+## 📋 COPY-PASTE FOR DEEPER ANALYSIS
+[Paste-ready 3-sentence summary of the top trade for pasting into TempTrader project chat]
+
+Keep total response under 400 words. Be direct. No hedging.`;
+
+  out.innerHTML = `<div style="color:var(--t2);font-size:12px;"><span class="spin"></span> Step 3/3: Claude analyzing ${cityData.length} cities...</div>`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1200,
+        messages: [{role:'user', content: prompt}]
+      })
+    });
+    const d = await r.json();
+    const text = d.content?.map(b=>b.text||'').join('') || 'No response.';
+
+    // Render the brief
+    out.innerHTML = `
+      <div style="border-top:1px solid var(--b1);padding-top:12px;margin-top:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:1px;">
+            🤖 Morning Brief — ${new Date().toLocaleTimeString()}
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-sm" onclick="copyBrief()" id="copyBriefBtn">📋 Copy for Project Chat</button>
+            <button class="btn btn-sm" onclick="runMorningBrief()">⟳ Refresh</button>
+          </div>
+        </div>
+        <div id="briefText" style="white-space:pre-wrap;line-height:1.85;font-size:12px;color:var(--t1);">${
+          text
+            .replace(/## 🎯.*$/m, m=>`<div style="color:var(--ac);font-weight:700;font-size:13px;margin:8px 0 6px;">${m}</div>`)
+            .replace(/## ⚠️.*$/m, m=>`<div style="color:var(--warn);font-weight:700;font-size:13px;margin:12px 0 6px;">${m}</div>`)
+            .replace(/## 📋.*$/m, m=>`<div style="color:var(--info);font-weight:700;font-size:13px;margin:12px 0 6px;">${m}</div>`)
+            .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--gold);">$1</strong>')
+            .replace(/\[BUY\]/g, '<span style="color:var(--ok);font-weight:700;">[BUY]</span>')
+            .replace(/\[SKIP\]/g, '<span style="color:var(--err);font-weight:700;">[SKIP]</span>')
+        }</div>
+      </div>`;
+    window._lastBriefText = text;
+  } catch(e) {
+    out.innerHTML = `<div style="color:var(--err);font-size:12px;">✗ Claude error: ${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  spin.style.display = 'none';
+  if (cancelBtn) cancelBtn.style.display = 'none';
+}
+  const text = window._lastBriefText || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBriefBtn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = '📋 Copy for Project Chat', 2000);
+  });
+}
+
+// ================================================================
+// LATE FLIP PLAYBOOK SCANNER
+// ================================================================
+
+// Open-Meteo coords for each city (free, no key, CORS *)
+const OM_COORDS = {
+  KPHX:{lat:33.4484,lon:-112.0740,tz:'America%2FPhoenix'},
+  KLAS:{lat:36.1699,lon:-115.1398,tz:'America%2FLos_Angeles'},
+  KATL:{lat:33.6407,lon:-84.4277,tz:'America%2FNew_York'},
+  KDFW:{lat:32.8998,lon:-97.0403,tz:'America%2FChicago'},
+  KAUS:{lat:30.1975,lon:-97.6664,tz:'America%2FChicago'},
+  KSAT:{lat:29.5337,lon:-98.4698,tz:'America%2FChicago'},
+  KOKC:{lat:35.3931,lon:-97.6008,tz:'America%2FChicago'},
+  KDEN:{lat:39.8561,lon:-104.6737,tz:'America%2FDenver'},
+  KSEA:{lat:47.4502,lon:-122.3088,tz:'America%2FLos_Angeles'},
+  KLAX:{lat:33.9425,lon:-118.4081,tz:'America%2FLos_Angeles'},
+  KSFO:{lat:37.6213,lon:-122.3790,tz:'America%2FLos_Angeles'},
+  KNYC:{lat:40.7829,lon:-73.9654,tz:'America%2FNew_York'},  // Central Park
+  KBOS:{lat:42.3656,lon:-71.0096,tz:'America%2FNew_York'},
+  KDCA:{lat:38.8521,lon:-77.0377,tz:'America%2FNew_York'},
+  KPHL:{lat:39.8744,lon:-75.2424,tz:'America%2FNew_York'},
+  KMDW:{lat:41.7868,lon:-87.7522,tz:'America%2FChicago'},
+  KMSP:{lat:44.8848,lon:-93.2223,tz:'America%2FChicago'},
+  KMIA:{lat:25.7959,lon:-80.2870,tz:'America%2FNew_York'},
+  KHOU:{lat:29.6454,lon:-95.2789,tz:'America%2FChicago'},
+  KMSY:{lat:29.9934,lon:-90.2580,tz:'America%2FChicago'},
+};
+
+// WU URL builder for each city
+const WU_URLS = {
+  KPHX:'https://www.wunderground.com/hourly/us/az/phoenix/KPHX/date/',
+  KLAS:'https://www.wunderground.com/hourly/us/nv/las-vegas/KLAS/date/',
+  KATL:'https://www.wunderground.com/hourly/us/ga/atlanta/KATL/date/',
+  KDFW:'https://www.wunderground.com/hourly/us/tx/dallas/KDFW/date/',
+  KAUS:'https://www.wunderground.com/hourly/us/tx/austin/KAUS/date/',
+  KSAT:'https://www.wunderground.com/hourly/us/tx/san-antonio/KSAT/date/',
+  KOKC:'https://www.wunderground.com/hourly/us/ok/oklahoma-city/KOKC/date/',
+  KDEN:'https://www.wunderground.com/hourly/us/co/denver/KDEN/date/',
+  KSEA:'https://www.wunderground.com/hourly/us/wa/seattle/KSEA/date/',
+  KLAX:'https://www.wunderground.com/hourly/us/ca/los-angeles/KLAX/date/',
+  KSFO:'https://www.wunderground.com/hourly/us/ca/san-francisco/KSFO/date/',
+  KNYC:'https://www.wunderground.com/hourly/us/ny/new-york-city/KNYC/date/',
+  KBOS:'https://www.wunderground.com/hourly/us/ma/boston/KBOS/date/',
+  KDCA:'https://www.wunderground.com/hourly/us/dc/washington/KDCA/date/',
+  KPHL:'https://www.wunderground.com/hourly/us/pa/philadelphia/KPHL/date/',
+  KMDW:'https://www.wunderground.com/hourly/us/il/chicago/KMDW/date/',
+  KMSP:'https://www.wunderground.com/hourly/us/mn/minneapolis/KMSP/date/',
+  KMIA:'https://www.wunderground.com/hourly/us/fl/miami/KMIA/date/',
+  KHOU:'https://www.wunderground.com/hourly/us/tx/houston/KHOU/date/',
+  KMSY:'https://www.wunderground.com/hourly/us/la/new-orleans/KMSY/date/',
+};
+
+function getWUUrl(icao) {
+  const base = WU_URLS[icao] || '';
+  const today = new Date();
+  return base + `${today.getFullYear()}/${String(today.getMonth()+1).padStart(2,'0')}/${String(today.getDate()).padStart(2,'0')}`;
+}
+
+async function fetchOpenMeteo(icao) {
+  const c = OM_COORDS[icao]; if (!c) return null;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloud_cover&temperature_unit=fahrenheit&wind_speed_unit=kn&timezone=${c.tz}&forecast_days=1`;
+  const r = await fetch(url);
+  const d = await r.json();
+  return d.hourly;
+}
+
+function parseBracketRange(subtitle) {
+  // e.g. "91° to 92°" → {lo:91, hi:92, mid:91.5}
+  // "91° or above" → {lo:91, hi:null, mid:null}
+  // "88° or below" → {lo:null, hi:88, mid:null}
+  if (!subtitle) return null;
+  const nums = (subtitle.match(/\d+\.?\d*/g)||[]).map(Number);
+  if (nums.length >= 2) return {lo:nums[0], hi:nums[1], mid:(nums[0]+nums[1])/2};
+  if (subtitle.includes('above') && nums[0]) return {lo:nums[0], hi:null, mid:null, ceil:true};
+  if (subtitle.includes('below') && nums[0]) return {lo:null, hi:nums[0], mid:null, floor:true};
+  return null;
+}
+
+// Region city lists for timezone-filtered scans
+const LF_REGIONS = {
+  eastern: ['KNYC','KBOS','KDCA','KPHL','KATL','KMIA'],
+  central: ['KMDW','KMSP','KDFW','KAUS','KSAT','KOKC','KDEN','KHOU'],
+  pacific: ['KPHX','KLAS','KSEA','KLAX','KSFO'],
+  all: null // null = all non-storm
+};
+
+async function runLateFlipScan(region='all') {
+  const btn=document.getElementById('lfBtn'), sp=document.getElementById('lfSpin');
+  const stat=document.getElementById('lfStat'), res=document.getElementById('lfResults');
+  const empty=document.getElementById('lfEmpty');
+  const dateWarn=document.getElementById('lfDateWarn');
+  btn.disabled=true; sp.style.display='inline-block';
+  res.style.display='none'; empty.style.display='none';
+  dateWarn.style.display='none';
+
+  const now = new Date();
+  const todayDs = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+
+  const candidates = [], skips = [];
+  let done = 0;
+  let usedTomorrowMarkets = false;
+
+  // Filter cities by region
+  const regionICAOs = LF_REGIONS[region];
+  const allFlip = BRIEF_CITIES.filter(c => c.type !== 'storm');
+  const flipCities = regionICAOs
+    ? allFlip.filter(c => regionICAOs.includes(c.icao))
+    : allFlip;
+
+  for (const city of flipCities) {
+    stat.textContent = `Scanning ${city.name}... (${done+1}/${flipCities.length})`;
+    try {
+      const c = CCFG[city.icao];
+      if (!c) { done++; continue; }
+
+      // Fetch Kalshi + IEM + Open-Meteo in parallel
+      const [mkRes, iemCsv, omData] = await Promise.all([
+        fetch(`${BASE}/markets?series_ticker=${city.series}&status=open&limit=15`).then(r=>r.json()),
+        fetch(iemUrl(city.icao)).then(r=>r.text()),
+        fetchOpenMeteo(city.icao).catch(()=>null)
+      ]);
+
+      // --- BRACKET LOGIC (BUG 1+3+4 fixes) ---
+      const allMkts = mkRes.markets || [];
+
+      // Get today's markets specifically
+      let todayMkts = allMkts.filter(m => m.event_ticker.includes(todayDs));
+      let isNextDayMarket = false;
+
+      if (!todayMkts.length) {
+        // Today settled — fall back to next open markets (tomorrow)
+        todayMkts = allMkts.filter(m => m.status !== 'settled').slice(0, 10);
+        isNextDayMarket = true;
+        usedTomorrowMarkets = true;
+      }
+
+      // Only keep RANGE brackets (exclude floor/ceiling thresholds)
+      // BUG 4 FIX: Sort by TEMPERATURE (lo value) to find adjacent brackets
+      const rangeMkts = todayMkts
+        .filter(m => {
+          const s = m.yes_sub_title || m.subtitle || '';
+          return s.includes(' to '); // only "X° to Y°" brackets
+        })
+        .map(m => {
+          const r = parseBracketRange(m.yes_sub_title || m.subtitle || '');
+          // BUG 3 FIX: Use bid price as current probability (last_price is stale)
+          const bidCents = Math.round(parseFloat(m.yes_bid_dollars || m.last_price_dollars || 0) * 100);
+          return { ...m, _range: r, _bidCents: bidCents };
+        })
+        .filter(m => m._range && m._range.mid !== null)
+        .sort((a, b) => b._bidCents - a._bidCents); // highest current bid = market favorite
+
+      if (!rangeMkts.length) { done++; continue; }
+
+      // BUG 3 FIX: Use highest CURRENT BID to find market favorite
+      const fav = rangeMkts[0];
+      const favCents = fav._bidCents;
+      const favAskCents = Math.round(parseFloat(fav.yes_ask_dollars || 0) * 100);
+      const modelTemp = fav._range.mid; // midpoint of favorite bracket = Kalshi's implied forecast
+
+      // BUG 4 FIX: Find bracket DIRECTLY below favorite by temperature, not by price rank
+      // Sort all range brackets by temperature (lo value)
+      const byTemp = [...rangeMkts].sort((a,b) => (b._range.lo||0) - (a._range.lo||0));
+      const favTempIdx = byTemp.findIndex(m => m.ticker === fav.ticker);
+      const lowerBracket = favTempIdx >= 0 ? byTemp[favTempIdx + 1] : null;
+      const lowerCents = lowerBracket ? lowerBracket._bidCents : null;
+
+      // --- IEM LOGIC (BUG 2+5 fixes) ---
+      const iemRows = parseIEM(iemCsv);
+      if (!iemRows.length) {
+        skips.push({ name: city.name, icao: city.icao, type: city.type,
+          currentTemp: null, modelGap: null, flipScore: 0, skipReason: 'No IEM data' });
+        done++; await new Promise(r => setTimeout(r, 300)); continue;
+      }
+      const isStale = iemRows[0]?._stale || false;
+      const ageMin = iemRows[0]?._ageMin || 0;
+      if (isStale) {
+        skips.push({ name: city.name, icao: city.icao, type: city.type,
+          currentTemp: iemRows[0].tmpf, modelGap: null, flipScore: 0,
+          skipReason: `Stale (${ageMin}min old)` });
+        done++; await new Promise(r => setTimeout(r, 300)); continue;
+      }
+
+      const currentTemp = iemRows[0].tmpf;
+      const windDirCurrent = iemRows[0].drct;
+      const windSpdCurrent = iemRows[0].sknt;
+      const skyCurrently = iemRows[0].skyc1 || '?';
+      const iemTime = iemRows[0].valid?.slice(11,16) || '?';
+
+      // Trend from last 3 hourly readings
+      const last3 = iemRows.slice(0, 3);
+      const iemTrend = last3.length >= 2
+        ? (last3[0].tmpf - last3[last3.length-1].tmpf > 1 ? '↑' :
+           last3[0].tmpf - last3[last3.length-1].tmpf < -1 ? '↓' : '→')
+        : '→';
+
+      // --- OPEN-METEO ---
+      let omPeak = null, omPeakTime = null, omAfternoon = [];
+      if (omData) {
+        const temps = omData.temperature_2m || [];
+        const times = omData.time || [];
+        const winds = omData.wind_speed_10m || [];
+        const wdirs = omData.wind_direction_10m || [];
+        const clouds = omData.cloud_cover || [];
+        if (temps.length) {
+          omPeak = Math.max(...temps);
+          omPeakTime = times[temps.indexOf(omPeak)]?.slice(11,16) || '?';
+          const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+          for (let i=0;i<times.length;i++) {
+            const h = parseInt(times[i].slice(11,13));
+            if (h >= 11 && h <= 19) {
+              omAfternoon.push({
+                time: times[i].slice(11,16),
+                temp: temps[i],
+                wind: `${dirs[Math.round((wdirs[i]||0)/22.5)%16]} ${Math.round(winds[i]||0)}kt`,
+                cloud: clouds[i] || 0
+              });
+            }
+          }
+        }
+      }
+
+      // --- FLIP DETECTION ---
+      const modelGap = modelTemp - currentTemp; // positive = model above station
+
+      const localTz = c.tz.replace('%2F','/');
+      const localHour = parseInt(new Date().toLocaleTimeString('en-US',{hour:'2-digit',hour12:false,timeZone:localTz}));
+      const peakHourLocal = omPeakTime ? parseInt(omPeakTime.split(':')[0]) : 15;
+      const heatingWindowOpen = localHour < peakHourLocal + 1;
+
+      const hasEwind = EAST.has(city.icao) && isEw(windDirCurrent);
+      const ewindDiscount = hasEwind ? (city.type==='coastal' ? 6 : 3) : 0;
+
+      // FLIP SCORE — higher = stronger signal
+      let flipScore = 0;
+      if (!isNextDayMarket) { // BUG 1 FIX: don't score next-day markets as flip candidates
+        if (modelGap > 1.5) flipScore += 3;
+        if (modelGap > 3) flipScore += 2;
+        if (modelGap > 5) flipScore += 1; // very large gap
+        if (heatingWindowOpen) flipScore += 2;
+        if (lowerCents && lowerCents >= 10 && lowerCents <= 35) flipScore += 2;
+        if (lowerCents && lowerCents <= 22) flipScore += 1; // extra cheap
+        if (iemTrend === '→' || iemTrend === '↓') flipScore += 1;
+        if (hasEwind) flipScore += 2;
+        if (city.type === 'smooth') flipScore += 1;
+        if (skyCurrently === 'OVC' || skyCurrently === 'BKN') flipScore += 1;
+        // Discount if om peak is close to station (gap may close naturally)
+        if (omPeak !== null && Math.abs(omPeak - currentTemp) < 2) flipScore -= 2;
+      }
+
+      const result = {
+        name: city.name, icao: city.icao, type: city.type, series: city.series,
+        currentTemp, iemTime, windDir: wdir(windDirCurrent),
+        windSpd: windSpdCurrent !== null ? Math.round(windSpdCurrent)+'kt' : '?',
+        sky: skyCurrently, iemTrend,
+        favSub: fav.yes_sub_title||fav.subtitle||'?', favCents, favAskCents, modelTemp,
+        modelGap,
+        lowerSub: lowerBracket?.yes_sub_title||lowerBracket?.subtitle||'?', lowerCents,
+        lowerTicker: lowerBracket?.ticker||'',
+        omPeak, omPeakTime, omAfternoon,
+        hasEwind, ewindDiscount, heatingWindowOpen, localHour, peakHourLocal,
+        flipScore, isNextDayMarket
+      };
+
+      if (!isNextDayMarket && flipScore >= 5 && lowerBracket && lowerCents >= 10 && lowerCents <= 45) {
+        candidates.push(result);
+      } else {
+        const skipReason = isNextDayMarket ? 'Market settled (next-day)' :
+          flipScore < 5 ? `Score ${flipScore}/12 (too low)` :
+          !lowerBracket ? 'No cheap lower bracket' : `Lower bracket ${lowerCents}¢ out of range`;
+        skips.push({...result, skipReason});
+      }
+
+      await new Promise(r => setTimeout(r, 400));
+    } catch(e) {
+      console.log(`LF ${city.icao}:`, e.message);
+      skips.push({name:city.name, icao:city.icao, type:city.type, skipReason:`Error: ${e.message.slice(0,40)}`});
+    }
+    done++;
+  }
+
+  candidates.sort((a,b) => b.flipScore - a.flipScore);
+  renderLateFlipResults(candidates, skips);
+
+  btn.disabled=false; sp.style.display='none';
+  stat.innerHTML=`<span class="live"><span class="ldot"></span>${candidates.length} candidates · ${flipCities.length} cities · ${new Date().toLocaleTimeString()}</span>`;
+  res.style.display='block'; empty.style.display='none';
+
+  if (usedTomorrowMarkets) {
+    dateWarn.textContent = '⚠ Some cities\' markets have already settled today. Next-day markets shown for those — not suitable for late flip.';
+    dateWarn.style.display = 'block';
+  }
+}
+
+function renderLateFlipResults(candidates, skips) {
+  const candEl = document.getElementById('lfCandidates');
+  const skipEl = document.getElementById('lfSkips');
+
+  if (!candidates.length) {
+    candEl.innerHTML = '<div style="color:var(--t3);font-size:12px;padding:12px;text-align:center;">No late flip candidates right now. Try again closer to peak heating window.</div>';
+  } else {
+    candEl.innerHTML = candidates.map(c => {
+      const gapStr = c.modelGap !== null ? `${c.modelGap.toFixed(1)}°F below model` : '?';
+      const nextDayWarn = c.isNextDayMarket ? '<span class="badge br" style="font-size:9px;">NEXT-DAY MKT</span>' : '';
+      const ewindNote = c.hasEwind ? `<span class="badge bw" style="font-size:9px;">⚠ E-WIND -${c.ewindDiscount}°F</span>` : '';
+      const windowNote = !c.heatingWindowOpen ? '<span class="badge br" style="font-size:9px;">⚠ WINDOW CLOSING</span>' : '<span class="badge bg" style="font-size:9px;">✓ WINDOW OPEN</span>';
+      // BUG 6 FIX: STRONG = green (opportunity), WEAK = red (skip)
+      const scoreColor = c.flipScore >= 9 ? 'var(--ok)' : c.flipScore >= 7 ? 'var(--warn)' : 'var(--err)';
+      const scoreLabel = c.flipScore >= 9 ? 'STRONG' : c.flipScore >= 7 ? 'MODERATE' : 'WEAK';
+
+      // Hourly table (next 4 hours)
+      const hourlyRows = c.omAfternoon.filter(h => {
+        const hh = parseInt(h.time.split(':')[0]);
+        return hh >= c.localHour && hh <= c.localHour + 4;
+      }).slice(0,4);
+
+      const hourlyHtml = hourlyRows.length ? `
+        <div style="margin-top:8px;overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;">
+            <tr style="color:var(--t3);">
+              <th style="padding:3px 6px;text-align:left;">Time</th>
+              <th style="padding:3px 6px;">Forecast</th>
+              <th style="padding:3px 6px;">Wind</th>
+              <th style="padding:3px 6px;">Cloud</th>
+            </tr>
+            ${hourlyRows.map(h => `
+              <tr style="border-top:1px solid var(--b1);">
+                <td style="padding:3px 6px;color:var(--t2);">${h.time}</td>
+                <td style="padding:3px 6px;font-weight:700;color:${h.temp >= (c.modelTemp||0) ? 'var(--err)' : 'var(--ok)'};">${h.temp.toFixed(1)}°F</td>
+                <td style="padding:3px 6px;color:var(--t2);">${h.wind}</td>
+                <td style="padding:3px 6px;color:var(--t3);">☁${h.cloud}%</td>
+              </tr>`).join('')}
+          </table>
+        </div>` : '';
+
+      return `<div style="background:var(--s1);border:1px solid var(--b1);border-left:4px solid ${scoreColor};border-radius:8px;padding:13px;margin-bottom:10px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <div>
+            <span style="font-size:16px;font-weight:700;">${c.name}</span>
+            <span style="font-size:11px;color:var(--t3);margin-left:8px;">${c.icao} · ${c.type.toUpperCase()}</span>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:700;color:${scoreColor};border:1px solid ${scoreColor};padding:2px 8px;border-radius:4px;">${scoreLabel} FLIP (${c.flipScore}pts)</span>
+            ${windowNote} ${ewindNote} ${nextDayWarn}
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:12px;margin-bottom:10px;">
+          <div>
+            <div style="color:var(--t3);font-size:10px;margin-bottom:2px;">STATION NOW</div>
+            <div style="font-weight:700;font-size:18px;color:var(--info);">${c.currentTemp?.toFixed(1)||'?'}°F ${c.iemTrend}</div>
+            <div style="color:var(--t3);font-size:11px;">${c.iemTime} · ${c.windDir} ${c.windSpd} · ${c.sky}</div>
+          </div>
+          <div>
+            <div style="color:var(--t3);font-size:10px;margin-bottom:2px;">KALSHI MODEL (bid)</div>
+            <div style="font-weight:700;font-size:18px;color:var(--warn);">${c.modelTemp?.toFixed(1)||'?'}°F</div>
+            <div style="color:var(--t3);font-size:11px;">Fav: ${c.favSub} bid:${c.favCents}¢</div>
+          </div>
+          <div>
+            <div style="color:var(--t3);font-size:10px;margin-bottom:2px;">OPEN-METEO PEAK</div>
+            <div style="font-weight:700;font-size:18px;color:var(--ok);">${c.omPeak?.toFixed(1)||'?'}°F</div>
+            <div style="color:var(--t3);font-size:11px;">@ ${c.omPeakTime||'?'} local</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:6px;padding:9px 12px;margin-bottom:8px;">
+          <span style="color:var(--ok);font-weight:700;">🎯 BUY:</span>
+          <span style="color:var(--t1);font-weight:700;margin:0 6px;">${c.lowerSub}</span>
+          <span style="color:var(--warn);font-weight:700;">@ ${c.lowerCents}¢ bid</span>
+          <span style="color:var(--t3);font-size:11px;margin-left:8px;">Gap: ${c.modelGap?.toFixed(1)||'?'}°F below model${c.ewindDiscount>0?' · E-wind -'+c.ewindDiscount+'°F':''}${c.heatingWindowOpen?' · Window open':' · Window closing'}</span>
+        </div>
+
+        ${hourlyHtml}
+
+        <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-ok" onclick="lfQuickFill('${c.lowerTicker}','${c.lowerCents}','${c.name}','${c.icao}')">
+            ⚡ Fill Order
+          </button>
+          <button class="btn btn-sm" onclick="showLFHourly('${c.icao}','${c.name}')">
+            📊 Full Hourly
+          </button>
+          <a href="${getWUUrl(c.icao)}" target="_blank" class="btn btn-sm" style="text-decoration:none;">
+            🌤 WU Hourly ↗
+          </a>
+          <button class="btn btn-sm" onclick="jumpToMarketFromLF('${c.series}','${c.icao}','${c.type}')">
+            📋 Full Ladder
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Skip list (compact)
+  skipEl.innerHTML = skips.map(c => {
+    const gapStr = c.skipReason || (c.modelGap !== null ? `gap ${c.modelGap.toFixed(1)}°F` : 'no data');
+    const col = c.skipReason ? 'var(--warn)' : (c.modelGap !== null && c.modelGap < 0 ? 'var(--err)' : 'var(--t3)');
+    return `<span style="display:inline-flex;align-items:center;gap:5px;background:var(--s2);border:1px solid var(--b1);border-radius:5px;padding:3px 8px;margin:3px;font-size:11px;">
+      ${c.name} <span style="color:${col};">${gapStr}</span>
+      <a href="${getWUUrl(c.icao)}" target="_blank" style="color:var(--ac);font-size:10px;">WU↗</a>
+    </span>`;
+  }).join('');
+}
+
+async function showLFHourly(icao, name) {
+  const panel = document.getElementById('lfHourly');
+  const title = document.getElementById('lfHourlyTitle');
+  const content = document.getElementById('lfHourlyContent');
+  title.textContent = `${name} — Full Hourly Forecast (Open-Meteo)`;
+  content.innerHTML = '<div style="color:var(--t3);font-size:12px;">Loading...</div>';
+  panel.style.display = 'block';
+  panel.scrollIntoView({behavior:'smooth'});
+
+  try {
+    const omData = await fetchOpenMeteo(icao);
+    if (!omData) { content.innerHTML = 'No data.'; return; }
+    const {time:times, temperature_2m:temps, wind_speed_10m:winds, wind_direction_10m:wdirs, cloud_cover:clouds} = omData;
+    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    const peak = Math.max(...temps);
+
+    content.innerHTML = `
+      <div style="margin-bottom:8px;font-size:12px;color:var(--t2);">
+        Peak forecast: <b style="color:var(--warn);">${peak.toFixed(1)}°F</b> at <b>${times[temps.indexOf(peak)].slice(11,16)}</b> local ·
+        <a href="${getWUUrl(icao)}" target="_blank" style="color:var(--ac);">Open WU Hourly ↗</a>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="color:var(--t3);border-bottom:1px solid var(--b1);">
+            <th style="padding:5px 8px;text-align:left;">Time</th>
+            <th style="padding:5px 8px;">Temp</th>
+            <th style="padding:5px 8px;">Wind</th>
+            <th style="padding:5px 8px;">Clouds</th>
+            <th style="padding:5px 8px;">Trend</th>
+          </tr></thead>
+          <tbody>
+            ${times.map((t,i) => {
+              const h = parseInt(t.slice(11,13));
+              if (h < 6 || h > 21) return '';
+              const isPeak = temps[i] === peak;
+              const prevTemp = i > 0 ? temps[i-1] : temps[i];
+              const trend = temps[i] > prevTemp + 0.3 ? '↑' : temps[i] < prevTemp - 0.3 ? '↓' : '→';
+              const trendColor = trend==='↑'?'var(--err)':trend==='↓'?'var(--info)':'var(--t3)';
+              return `<tr style="border-top:1px solid var(--b1);${isPeak?'background:rgba(251,191,36,.08);':''}">
+                <td style="padding:5px 8px;color:var(--t2);">${t.slice(11,16)}${isPeak?' 🏆':''}</td>
+                <td style="padding:5px 8px;font-weight:${isPeak?'700':'400'};color:${isPeak?'var(--gold)':'var(--t1)'};">${temps[i].toFixed(1)}°F</td>
+                <td style="padding:5px 8px;color:var(--t2);">${dirs[Math.round((wdirs[i]||0)/22.5)%16]} ${Math.round(winds[i]||0)}kt</td>
+                <td style="padding:5px 8px;color:var(--t3);">☁${clouds[i]}%</td>
+                <td style="padding:5px 8px;color:${trendColor};font-size:16px;">${trend}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) {
+    content.innerHTML = `<span style="color:var(--err);">Error: ${e.message}</span>`;
+  }
+}
+
+function lfQuickFill(ticker, price, name, icao) {
+  // Jump to Markets tab with the flip bracket pre-filled
+  document.getElementById('mkTicker').value = ticker;
+  document.getElementById('mkPrice').value = price;
+  document.getElementById('mkQty').value = 20;
+  document.getElementById('mkSide').value = 'yes';
+  document.getElementById('mkType').value = 'limit';
+  // Switch to Markets tab
+  showTab('markets', document.querySelector('.tab'));
+  document.querySelectorAll('.tab').forEach((t,i)=>{if(i===0){t.classList.add('active');}else{t.classList.remove('active');}});
+  document.querySelectorAll('.panel').forEach((p,i)=>{if(i===0)p.classList.add('active');else p.classList.remove('active');});
+  document.getElementById('mkMain').style.display = 'block';
+  document.getElementById('mkEmpty').style.display = 'none';
+  document.getElementById('mkOrdResult').innerHTML = `<span style="color:var(--warn);">⚡ Late Flip: ${name} pre-filled. Verify bracket then place.</span>`;
+}
+
+function jumpToMarketFromLF(series, icao, type) {
+  const sel = document.getElementById('mkSel');
+  for (let i=0;i<sel.options.length;i++) {
+    if (sel.options[i].value.startsWith(series+'|')) { sel.selectedIndex=i; break; }
+  }
+  curSeries=series; curICAO=icao; curType=type;
+  showTab('markets', document.querySelector('.tab'));
+  document.querySelectorAll('.tab').forEach((t,i)=>{if(i===0){t.classList.add('active');}else{t.classList.remove('active');}});
+  document.querySelectorAll('.panel').forEach((p,i)=>{if(i===0)p.classList.add('active');else p.classList.remove('active');});
+  loadBrackets();
+}
+
+// Init
+renderPositions();
+</script>
+</body>
+</html>
