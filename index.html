@@ -1984,6 +1984,8 @@ Keep total response under 400 words. Be direct. No hedging.`;
   spin.style.display = 'none';
   if (cancelBtn) cancelBtn.style.display = 'none';
 }
+
+function copyBrief() {
   const text = window._lastBriefText || '';
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copyBriefBtn');
