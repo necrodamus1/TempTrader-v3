@@ -1938,79 +1938,60 @@ For each trade (max 3):
 
 Keep total response under 400 words. Be direct. No hedging.`;
 
-  out.innerHTML = `<div style="color:var(--t2);font-size:12px;"><span class="spin"></span> Step 3/3: Claude analyzing ${cityData.length} cities...</div>`;
+  out.innerHTML = `<div style="color:var(--t2);font-size:12px;"><span class="spin"></span> Step 3/3: Generating brief for ${cityData.length} cities...</div>`;
 
   let briefText = '';
   try {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1200,
-        messages: [{role:'user', content: prompt}]
-      })
+      body: JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,messages:[{role:'user',content:prompt}]})
     });
-    if (!r.ok) throw new Error(`API ${r.status}`);
+    if (!r.ok) throw new Error('API '+r.status);
     const d = await r.json();
     briefText = d.content?.map(b=>b.text||'').join('') || 'No response.';
-  } catch(e) {
-    // Claude API not available outside claude.ai — show raw data summary instead
-    console.log('Claude API unavailable:', e.message);
-    const sorted = [...cityData].sort((a,b) => {
-      const typeOrder = {smooth:0, marine:1, coastal:2, storm:3};
-      return (typeOrder[a.type]||9) - (typeOrder[b.type]||9);
-    });
-    briefText = `## 🤖 Morning Brief — Raw Scan (${new Date().toLocaleTimeString()})
-Claude AI unavailable outside claude.ai — showing raw data. Paste this into your TempTrader project chat for full analysis.
-
-${sorted.map(c => {
-  const iem = c.iem[0];
-  const fav = c.brackets[0];
-  const favCents = fav ? Math.round(parseFloat(fav.yes_bid_dollars||fav.last_price_dollars||0)*100) : 0;
-  const favSub = fav?.yes_sub_title || '?';
-  const buyZones = c.brackets.filter(m => {
-    const b = Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
-    return b >= 15 && b <= 35;
-  });
-  const tempStr = iem ? `${iem.tmpf.toFixed(1)}°F` : 'No data';
-  const windStr = iem ? `${['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round((iem.drct||0)/22.5)%16]} ${iem.sknt?Math.round(iem.sknt)+'kt':'?'}` : '';
-  const afdSnip = c.afd ? c.afd.replace(/\n+/g,' ').slice(0,200) : 'No AFD';
-  return `**${c.name}** (${c.type.toUpperCase()}) | Station: ${tempStr} ${windStr} | Fav: ${favSub} @${favCents}¢ | BuyZones: ${buyZones.length}
-AFD: ${afdSnip}`;
-}).join('\n\n')}
-
-## 📋 PASTE THIS INTO PROJECT CHAT
-Morning Brief data collected at ${new Date().toLocaleTimeString()} PST. ${cityData.length} cities scanned. Top smooth cities by buy zone count: ${cityData.filter(c=>c.type==='smooth').filter(c=>c.brackets.some(m=>Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100)>=15&&Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100)<=35)).map(c=>c.name).join(', ')||'none'}. Paste the full data above for analysis.`;
+  } catch(apiErr) {
+    console.log('Claude API unavailable:', apiErr.message);
+    const sorted = [...cityData].sort((a,b)=>({smooth:0,marine:1,coastal:2,storm:3}[a.type]||9)-({smooth:0,marine:1,coastal:2,storm:3}[b.type]||9));
+    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    briefText = '## 🤖 Morning Brief — Raw Data (' + new Date().toLocaleTimeString() + ')\nClaude AI unavailable outside claude.ai — paste this into your project chat for analysis.\n\n' +
+      sorted.map(c => {
+        const iem = c.iem[0];
+        const fav = c.brackets[0];
+        const favCents = fav ? Math.round(parseFloat(fav.yes_bid_dollars||fav.last_price_dollars||0)*100) : 0;
+        const favSub = fav?.yes_sub_title || '?';
+        const buyZones = c.brackets.filter(m=>{ const b=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100); return b>=15&&b<=35; }).length;
+        const tempStr = iem ? iem.tmpf.toFixed(1)+'°F' : 'No data';
+        const windStr = iem && iem.drct!=null ? dirs[Math.round(iem.drct/22.5)%16]+' '+(iem.sknt?Math.round(iem.sknt)+'kt':'') : '';
+        const afdSnip = c.afd ? c.afd.replace(/\n+/g,' ').slice(0,150) : 'No AFD';
+        return '**'+c.name+'** ('+c.type.toUpperCase()+') | '+tempStr+' '+windStr+' | Fav: '+favSub+' @'+favCents+'c | BuyZones:'+buyZones+'\nAFD: '+afdSnip;
+      }).join('\n\n') +
+      '\n\n## 📋 PASTE INTO PROJECT CHAT\n' +
+      cityData.length + ' cities scanned ' + new Date().toLocaleTimeString();
   }
 
-    // Render the brief
-    out.innerHTML = `
-      <div style="border-top:1px solid var(--b1);padding-top:12px;margin-top:4px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-          <div style="font-size:11px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:1px;">
-            🤖 Morning Brief — ${new Date().toLocaleTimeString()}
-          </div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-sm" onclick="copyBrief()" id="copyBriefBtn">📋 Copy for Project Chat</button>
-            <button class="btn btn-sm" onclick="runMorningBrief()">⟳ Refresh</button>
-          </div>
+  window._lastBriefText = briefText;
+
+  out.innerHTML = `
+    <div style="border-top:1px solid var(--b1);padding-top:12px;margin-top:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:1px;">
+          🤖 Morning Brief — ${new Date().toLocaleTimeString()}
         </div>
-        <div id="briefText" style="white-space:pre-wrap;line-height:1.85;font-size:12px;color:var(--t1);">${
-          briefText
-            .replace(/## 🎯.*$/m, m=>`<div style="color:var(--ac);font-weight:700;font-size:13px;margin:8px 0 6px;">${m}</div>`)
-            .replace(/## ⚠️.*$/m, m=>`<div style="color:var(--warn);font-weight:700;font-size:13px;margin:12px 0 6px;">${m}</div>`)
-            .replace(/## 📋.*$/m, m=>`<div style="color:var(--info);font-weight:700;font-size:13px;margin:12px 0 6px;">${m}</div>`)
-            .replace(/## 🤖.*$/m, m=>`<div style="color:var(--ac);font-weight:700;font-size:13px;margin:8px 0 6px;">${m}</div>`)
-            .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--gold);">$1</strong>')
-            .replace(/\[BUY\]/g, '<span style="color:var(--ok);font-weight:700;">[BUY]</span>')
-            .replace(/\[SKIP\]/g, '<span style="color:var(--err);font-weight:700;">[SKIP]</span>')
-        }</div>
-      </div>`;
-    window._lastBriefText = briefText;
-  } catch(e) {
-    out.innerHTML = `<div style="color:var(--err);font-size:12px;">✗ Claude error: ${e.message}</div>`;
-  }
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="copyBrief()" id="copyBriefBtn">📋 Copy for Project Chat</button>
+          <button class="btn btn-sm" onclick="runMorningBrief()">⟳ Refresh</button>
+        </div>
+      </div>
+      <div id="briefText" style="white-space:pre-wrap;line-height:1.85;font-size:12px;color:var(--t1);">${
+        briefText
+          .replace(/## 🎯.*$/m, m=>`<div style="color:var(--ac);font-weight:700;font-size:13px;margin:8px 0 6px;">${m}</div>`)
+          .replace(/## ⚠️.*$/m, m=>`<div style="color:var(--warn);font-weight:700;font-size:13px;margin:12px 0 6px;">${m}</div>`)
+          .replace(/## 📋.*$/m, m=>`<div style="color:var(--info);font-weight:700;font-size:13px;margin:12px 0 6px;">${m}</div>`)
+          .replace(/## 🤖.*$/m, m=>`<div style="color:var(--ac);font-weight:700;font-size:13px;margin:8px 0 6px;">${m}</div>`)
+          .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--gold);">$1</strong>')
+      }</div>
+    </div>`;
 
   btn.disabled = false;
   spin.style.display = 'none';
