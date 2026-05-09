@@ -1475,8 +1475,8 @@ async function fetchMETAR() {
   try {
     // Fetch METAR and TAF in parallel - decoded endpoint doesn't include TAF inline
     const [metarRes, tafRes] = await Promise.all([
-      fetch(`/api/avwx/metar?ids=${icao}&format=decoded`),
-      fetch(`/api/avwx/taf?ids=${icao}&format=raw`)
+      fetch(`https://temptrader.necrodamus21.workers.dev/avwx/metar?ids=${icao}&format=decoded`),
+      fetch(`https://temptrader.necrodamus21.workers.dev/avwx/taf?ids=${icao}&format=raw`)
     ]);
     const metarText = await metarRes.text();
     const tafText = await tafRes.text();
@@ -1557,7 +1557,7 @@ async function fetchMetarMon() {
   const stat=document.getElementById('monStat');
   stat.textContent='Fetching METAR...';
   try {
-    const res=await fetch(`/api/avwx/metar?ids=${icao}&format=decoded`);
+    const res=await fetch(`https://temptrader.necrodamus21.workers.dev/avwx/metar?ids=${icao}&format=decoded`);
     const text=await res.text();
     const tm=text.match(/Temperature:\s*([\d.]+)\s*C\s*\(([\d.]+)\s*F\)/i);
     const wm=text.match(/Wind:\s*([^\n]+)/i);
