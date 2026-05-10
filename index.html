@@ -333,14 +333,24 @@ textarea{resize:vertical;line-height:1.5;}
     <div id="briefOut" style="margin-top:12px;display:none;"></div>
   </div>
 
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:9px;">
-    <button class="btn btn-sm" onclick="runScan()" id="scanBtn"><span class="spin" id="scanSpin" style="display:none;"></span>⟳ Scan Cards</button>
+  <!-- SCAN MODE -->
+  <div style="background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:9px 12px;margin-bottom:10px;">
+    <div style="font-size:10px;color:var(--t3);margin-bottom:6px;font-weight:600;">SCAN MODE</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;">
+      <button class="btn btn-sm" id="modeHigh" onclick="setScanMode('high',this)" style="border-color:var(--ac);color:var(--ac);">📅 HIGH</button>
+      <button class="btn btn-sm" id="modeLow" onclick="setScanMode('low',this)">🌙 LOWs</button>
+      <button class="btn btn-sm" id="modeBoth" onclick="setScanMode('both',this)">📊 HIGH+LOW</button>
+    </div>
+    <div id="modeDesc" style="font-size:10px;color:var(--t3);margin-top:5px;">Today HIGH · top 2 brackets · IEM live station · LOWs great for 10pm-5am</div>
+  </div>
+  <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:9px;">
+    <button class="btn btn-sm" onclick="runScan()" id="scanBtn"><span class="spin" id="scanSpin" style="display:none;"></span>⟳ Scan All</button>
     <button class="btn btn-sm" onclick="runScan('smooth')">Smooth</button>
     <button class="btn btn-sm" onclick="runScan('marine')">Marine</button>
     <button class="btn btn-sm" onclick="runScan('coastal')">Coastal</button>
-    <div id="scanStat" style="font-size:11px;color:var(--t3);"></div>
+    <div id="scanStat" style="font-size:11px;color:var(--t3);margin-left:auto;"></div>
   </div>
-  <div class="alert ain"><span class="ai">ℹ</span><div style="font-size:11px;"><b>Price reminder:</b> Kalshi % = last contract price ¢. Driven by Kalshi model, not consensus. ⭐ BUY ZONE = 15–35¢ brackets worth investigating. Click any card to jump to full ladder.</div></div>
+  <div class="alert ain"><span class="ai">ℹ</span><div style="font-size:11px;">⭐ BUY ZONE = 15–35¢ bid · Click card → full ladder · Sequential to avoid rate limits</div></div>
   <div class="sg" id="scanGrid"><div style="grid-column:1/-1;text-align:center;color:var(--t3);font-size:12px;padding:28px 0;">Click Scan to fetch all cities.</div></div>
 </div>
 
@@ -493,7 +503,10 @@ textarea{resize:vertical;line-height:1.5;}
       <div id="monHist"><div style="color:var(--t3);font-size:12px;padding:8px 0;">No readings yet.</div></div>
       <div class="sh">Manual Entry</div>
       <div class="fi" style="margin-bottom:6px;">
-        <input type="text" id="manT" placeholder="14:51"><input type="number" id="manF" placeholder="°F" step="0.1"><input type="text" id="manW" placeholder="Wind">
+        <input type="text" id="manT" placeholder="14:51" style="width:20%">
+        <input type="number" id="manF" placeholder="°F" step="0.1" style="width:22%">
+        <input type="text" id="manW" placeholder="Wind (e.g. NW 8kt)" style="width:30%">
+        <input type="text" id="manSky" placeholder="Sky (CLR/FEW/SCT/BKN/OVC)" style="width:25%">
       </div>
       <div style="display:flex;gap:6px;">
         <button class="btn btn-ok btn-sm" onclick="addMan()">+ Add</button>
@@ -570,21 +583,26 @@ const SMAP = {
   KXLOWTMIA:'KMIA',KXLOWTHOU:'KHOU',KXLOWTNOLA:'KMSY',
 };
 const SCAN_LIST = [
-  // Smooth first
-  {series:'KXHIGHTPHX',icao:'KPHX'},{series:'KXHIGHTLV',icao:'KLAS'},
-  {series:'KXHIGHTATL',icao:'KATL'},{series:'KXHIGHTDAL',icao:'KDFW'},
-  {series:'KXHIGHAUS',icao:'KAUS'},{series:'KXHIGHTSATX',icao:'KSAT'},
-  {series:'KXHIGHTOKC',icao:'KOKC'},{series:'KXHIGHDEN',icao:'KDEN'},
-  // Marine
-  {series:'KXHIGHTSEA',icao:'KSEA'},{series:'KXHIGHLAX',icao:'KLAX'},
-  {series:'KXHIGHTSFO',icao:'KSFO'},
-  // Coastal
-  {series:'KXHIGHNY',icao:'KNYC'},{series:'KXHIGHTBOS',icao:'KBOS'},
-  {series:'KXHIGHTDC',icao:'KDCA'},{series:'KXHIGHPHIL',icao:'KPHL'},
-  {series:'KXHIGHCHI',icao:'KMDW'},{series:'KXHIGHTMIN',icao:'KMSP'},
-  // Storm
-  {series:'KXHIGHMIA',icao:'KMIA'},{series:'KXHIGHTHOU',icao:'KHOU'},
-  {series:'KXHIGHTNOLA',icao:'KMSY'},
+  {series:'KXHIGHTPHX',lseries:'KXLOWTPHX',icao:'KPHX'},
+  {series:'KXHIGHTLV',lseries:'KXLOWTLV',icao:'KLAS'},
+  {series:'KXHIGHTATL',lseries:null,icao:'KATL'},
+  {series:'KXHIGHTDAL',lseries:'KXLOWTDAL',icao:'KDFW'},
+  {series:'KXHIGHAUS',lseries:'KXLOWTAUS',icao:'KAUS'},
+  {series:'KXHIGHTSATX',lseries:null,icao:'KSAT'},
+  {series:'KXHIGHTOKC',lseries:'KXLOWTOKC',icao:'KOKC'},
+  {series:'KXHIGHDEN',lseries:'KXLOWTDEN',icao:'KDEN'},
+  {series:'KXHIGHTSEA',lseries:'KXLOWTSEA',icao:'KSEA'},
+  {series:'KXHIGHLAX',lseries:'KXLOWTLAX',icao:'KLAX'},
+  {series:'KXHIGHTSFO',lseries:'KXLOWTSFO',icao:'KSFO'},
+  {series:'KXHIGHNY',lseries:null,icao:'KNYC'},
+  {series:'KXHIGHTBOS',lseries:'KXLOWTBOS',icao:'KBOS'},
+  {series:'KXHIGHTDC',lseries:null,icao:'KDCA'},
+  {series:'KXHIGHPHIL',lseries:null,icao:'KPHL'},
+  {series:'KXHIGHCHI',lseries:'KXLOWTCHI',icao:'KMDW'},
+  {series:'KXHIGHTMIN',lseries:'KXLOWTMIN',icao:'KMSP'},
+  {series:'KXHIGHMIA',lseries:'KXLOWTMIA',icao:'KMIA'},
+  {series:'KXHIGHTHOU',lseries:'KXLOWTHOU',icao:'KHOU'},
+  {series:'KXHIGHTNOLA',lseries:'KXLOWTNOLA',icao:'KMSY'},
 ];
 
 // ================================================================
@@ -1316,79 +1334,182 @@ async function loadFills() {
 async function runScan(ft) {
   const btn=document.getElementById('scanBtn'),sp=document.getElementById('scanSpin'),stat=document.getElementById('scanStat');
   btn.disabled=true; sp.style.display='inline-block'; stat.textContent='Scanning...';
-  document.getElementById('scanGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:28px;color:var(--t3);"><span class="spin"></span> Fetching all cities...</div>';
-  const list=ft?SCAN_LIST.filter(x=>CCFG[x.icao]?.type===ft):SCAN_LIST;
-  const res={};
-  let done=0;
-  await Promise.all(list.map(async({series,icao})=>{
+  document.getElementById('scanGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:28px;color:var(--t3);"><span class="spin"></span> Fetching cities...</div>';
+
+  const mode = window._scanMode || 'high';
+  const showLow = mode === 'low' || mode === 'both';
+  const showHigh = mode === 'high' || mode === 'both';
+
+  const list = ft ? SCAN_LIST.filter(x=>CCFG[x.icao]?.type===ft) : SCAN_LIST;
+  const res = {};
+  let done = 0;
+
+  for (const {series, lseries, icao} of list) {
+    stat.textContent = `${CCFG[icao]?.n||icao} (${done+1}/${list.length})...`;
     try {
-      const today=new Date(), ds=`${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
-      const [mkd,csv]=await Promise.all([fetch(`${BASE}/markets?series_ticker=${series}&status=open&limit=15`).then(r=>r.json()),fetch(iemUrl(icao)).then(r=>r.text())]);
-      let mkts=(mkd.markets||[]).filter(m=>m.event_ticker.includes(ds));
-      if(!mkts.length) mkts=(mkd.markets||[]).filter(m=>m.status!=='settled').slice(0,10);
-      res[icao]={mkts,iem:parseIEM(csv),series};
-    } catch(e){res[icao]={mkts:[],iem:[],series,err:e.message};}
-    stat.textContent=`Scanning... ${++done}/${list.length}`;
-  }));
-  renderScan(res);
+      // Build fetch list
+      const fetches = [];
+      if (showHigh) fetches.push(fetch(`${BASE}/markets?series_ticker=${series}&status=open&limit=12`).then(r=>r.json()).catch(()=>({markets:[]})));
+      if (showLow && lseries) fetches.push(fetch(`${BASE}/markets?series_ticker=${lseries}&status=open&limit=10`).then(r=>r.json()).catch(()=>({markets:[]})));
+      fetches.push(fetch(iemUrl(icao)).then(r=>r.text()).catch(()=>''));
+
+      const results = await Promise.all(fetches);
+      const csv = results[results.length - 1];
+      const iem = parseIEM(csv);
+
+      // Parse HIGH markets - just take open ones sorted by bid (Kalshi handles the date)
+      let highMkts = [];
+      if (showHigh) {
+        let m = (results[0].markets||[]).filter(mk => mk.status !== 'settled');
+        m.sort((a,b) => parseFloat(b.yes_bid_dollars||b.last_price_dollars||0) - parseFloat(a.yes_bid_dollars||a.last_price_dollars||0));
+        // Filter to range brackets (exclude floor/ceiling for main view)
+        const rangeMkts = m.filter(mk => (mk.yes_sub_title||'').includes(' to '));
+        highMkts = rangeMkts.length ? rangeMkts : m;
+        highMkts = highMkts.slice(0, 6);
+      }
+
+      // Parse LOW markets
+      let lowMkts = [];
+      if (showLow && lseries) {
+        const ri = showHigh ? 1 : 0;
+        let lm = (results[ri]?.markets||[]).filter(mk => mk.status !== 'settled');
+        lm.sort((a,b) => parseFloat(b.yes_bid_dollars||b.last_price_dollars||0) - parseFloat(a.yes_bid_dollars||a.last_price_dollars||0));
+        const rangeLow = lm.filter(mk => (mk.yes_sub_title||'').includes(' to '));
+        lowMkts = rangeLow.length ? rangeLow : lm;
+        lowMkts = lowMkts.slice(0, 4);
+      }
+
+      res[icao] = {highMkts, lowMkts, iem, series, lseries};
+    } catch(e) {
+      res[icao] = {highMkts:[], lowMkts:[], iem:[], series, lseries, err:e.message};
+    }
+    done++;
+    await new Promise(r => setTimeout(r, 280)); // sequential - avoids rate limits
+  }
+
+  stat.innerHTML = `<span class="live"><span class="ldot"></span>${list.length} cities · ${new Date().toLocaleTimeString()}</span>`;
+  renderScan(res, mode);
   btn.disabled=false; sp.style.display='none';
-  stat.innerHTML=`<span class="live"><span class="ldot"></span>Updated ${new Date().toLocaleTimeString()}</span>`;
 }
 
-function renderScan(res) {
-  const order=['smooth','marine','coastal','storm'];
-  const sorted=Object.entries(res).sort(([a],[b])=>{
-    const ta=order.indexOf(CCFG[a]?.type||'smooth'), tb=order.indexOf(CCFG[b]?.type||'smooth');
-    return ta!==tb?ta-tb:a.localeCompare(b);
+// Global scan mode
+window._scanMode = 'high';
+
+function setScanMode(mode, btn) {
+  window._scanMode = mode;
+  ['modeHigh','modeLow','modeBoth'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.borderColor=''; el.style.color=''; }
   });
-  const typBadge={smooth:'<span class="badge bb" style="font-size:9px;">SMOOTH</span>',marine:'<span class="badge bi" style="font-size:9px;">MARINE</span>',coastal:'<span class="badge bp" style="font-size:9px;">COASTAL</span>',storm:'<span class="badge br" style="font-size:9px;">STORM</span>'};
-  document.getElementById('scanGrid').innerHTML=sorted.map(([icao,{mkts,iem,series,err}])=>{
-    const city=CCFG[icao]; if(!city) return '';
-    const r=iem[0],prev=iem[1];
-    let tc='fl',ti='→';
-    if(r&&prev){const d=r.tmpf-prev.tmpf;if(d>.5){tc='up';ti='↑';}else if(d<-.5){tc='dn';ti='↓';}}
-    // Use bid price (current live probability) not last trade (stale)
-    const fav=mkts.sort((a,b)=>parseFloat(b.yes_bid_dollars||b.last_price_dollars||0)-parseFloat(a.yes_bid_dollars||a.last_price_dollars||0))[0];
-    const favCents=fav?Math.round(parseFloat(fav.yes_bid_dollars||fav.last_price_dollars||0)*100):0;
-    const favSub=fav?.yes_sub_title||fav?.subtitle||'—';
-    const buyZone=mkts.filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
-    const flags=[];
-    if(r&&EAST.has(icao)&&isEw(r.drct)) flags.push('<span class="badge bw" style="font-size:9px;">⚠ E-WIND</span>');
-    if(r&&city.type==='marine'&&isMCap(r.skyc1,r.skyl1)) flags.push('<span class="badge bi" style="font-size:9px;">⚠ MARINE CAP</span>');
-    if(buyZone>0) flags.push(`<span class="badge bg" style="font-size:9px;">⭐ ${buyZone} BUY ZONE</span>`);
-    return `<div class="sc ${city.type}" onclick="jumpToMkt('${series}','${icao}','${city.type}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
-        <div><div style="font-weight:700;font-size:12px;">${city.n}</div><div style="font-size:10px;color:var(--t3);">${icao}</div></div>
-        ${typBadge[city.type]||''}
+  if (btn) { btn.style.borderColor='var(--ac)'; btn.style.color='var(--ac)'; }
+  const descs = {
+    high: 'HIGH markets · top 2 range brackets by bid · IEM live station · ⭐ BUY ZONE = 15–35¢',
+    low: '🌙 LOW markets · best for 10pm-5am PST · eastern cities peak low around midnight EST',
+    both: '📊 HIGH + LOW side by side · full daily picture'
+  };
+  const d = document.getElementById('modeDesc');
+  if (d) d.textContent = descs[mode] || '';
+}
+
+function renderScan(res, mode) {
+  const showLow = mode === 'low' || mode === 'both';
+  const showHigh = mode === 'high' || mode === 'both';
+  const typeOrder = {smooth:0, marine:1, coastal:2, storm:3};
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+
+  const sorted = Object.entries(res).sort((a,b) => {
+    const ta = CCFG[a[0]]?.type||'z', tb = CCFG[b[0]]?.type||'z';
+    const od = (typeOrder[ta]||9) - (typeOrder[tb]||9);
+    if (od !== 0) return od;
+    // Sort by buy zone count desc within type
+    const abz = (a[1].highMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
+    const bbz = (b[1].highMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
+    return bbz - abz;
+  });
+
+  const mkBracketRows = (mkts, max=2) => {
+    if (!mkts.length) return '<div style="font-size:10px;color:var(--t3);padding:4px 0;">No data</div>';
+    return mkts.slice(0, max).map(m => {
+      const bid = Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
+      const ask = Math.round(parseFloat(m.yes_ask_dollars||0)*100);
+      const sub = m.yes_sub_title || m.subtitle || '?';
+      const isBuy = bid>=15&&bid<=35;
+      const isLot = bid>0&&bid<15;
+      const col = bid>=60?'var(--err)':bid>=35?'var(--warn)':isBuy?'var(--ok)':isLot?'var(--gold)':'var(--t3)';
+      const sig = isBuy?'⭐ ':isLot?'🎯 ':'';
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-top:1px solid var(--b1);">
+        <span style="font-size:11px;color:var(--t2);">${sig}${sub}</span>
+        <div style="text-align:right;">
+          <span style="font-size:12px;font-weight:700;color:${col};">${bid}¢</span>
+          ${ask?`<span style="font-size:9px;color:var(--t3);margin-left:4px;">ask:${ask}</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+  };
+
+  document.getElementById('scanGrid').innerHTML = sorted.map(([icao, data]) => {
+    const cfg = CCFG[icao]; if(!cfg) return '';
+    const r = data.iem?.[0], prev = data.iem?.[1];
+    let tc='fl', ti='→';
+    if(r&&prev){const d=r.tmpf-prev.tmpf;if(d>.8){tc='up';ti='↑';}else if(d<-.8){tc='dn';ti='↓';}}
+
+    const windStr = r && r.drct!=null ? `${dirs[Math.round((r.drct||0)/22.5)%16]} ${r.sknt?Math.round(r.sknt)+'kt':'?'}` : '';
+    const skyStr = r?.skyc1&&r.skyc1!=='M' ? r.skyc1 : '';
+    const timeStr = r?.valid?.slice(11,16) || '';
+    const staleStr = r?._stale ? ' ⚠' : '';
+    const ewindFlag = EAST.has(icao) && isEw(r?.drct) ? '<span style="font-size:9px;color:var(--warn);margin-left:4px;">E-WIND</span>' : '';
+
+    const typeCols = {smooth:'var(--ok)',marine:'var(--info)',coastal:'var(--ac)',storm:'var(--err)'};
+    const typeCol = typeCols[cfg.type]||'var(--t3)';
+
+    const highBZ = (data.highMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
+    const lowBZ = (data.lowMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
+    const totalBZ = (showHigh?highBZ:0)+(showLow?lowBZ:0);
+
+    return `<div class="sc" onclick="jumpToCity('${data.series}','${icao}','${cfg.type}')" style="cursor:pointer;border-left:3px solid ${typeCol};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;">
+        <div>
+          <span style="font-weight:700;font-size:13px;">${cfg.n}</span>
+          <span style="font-size:10px;color:var(--t3);margin-left:5px;">${icao}</span>
+        </div>
+        <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+          <span class="badge b${cfg.type[0]}">${cfg.type.toUpperCase()}</span>
+          ${totalBZ>0?`<span class="badge bg">⭐${totalBZ}</span>`:''}
+        </div>
       </div>
-      ${r?`<div style="display:flex;align-items:flex-end;gap:7px;">
-        <div class="mp ${tc}" style="font-size:22px;">${r.tmpf.toFixed(1)}°F ${ti}</div>
-        <div style="font-size:10px;color:${r._stale?'var(--err)':'var(--t3)'};">${r.valid.slice(11,16)}${r._stale?' ⚠STALE':''}</div>
-      </div>
-      <div style="font-size:11px;color:var(--t2);margin-top:3px;">💨 ${wdir(r.drct)} ${r.sknt?Math.round(r.sknt)+'kt':''} ${r.skyc1&&r.skyc1!=='M'?'· ☁'+r.skyc1:''}</div>`:'<div style="color:var(--t3);font-size:11px;">No IEM data</div>'}
-      ${fav?`<div style="margin-top:6px;padding:5px 7px;background:var(--s2);border-radius:4px;font-size:11px;">
-        <span style="color:var(--t2);">${favSub}</span>
-        <span style="float:right;font-weight:700;color:${favCents>=60?'var(--err)':favCents>=30?'var(--warn)':'var(--ok)'};">${favCents}¢</span>
-      </div>`:''}
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;">${flags.join('')}</div>
+      ${r
+        ? `<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:4px;">
+             <span class="mp ${tc}" style="font-size:20px;">${r.tmpf.toFixed(1)}°F ${ti}</span>
+             <span style="font-size:10px;color:var(--t3);">${timeStr}${staleStr}</span>
+             ${ewindFlag}
+           </div>
+           <div style="font-size:11px;color:var(--t3);margin-bottom:5px;">${windStr}${skyStr?' · '+skyStr:''}</div>`
+        : `<div style="font-size:11px;color:var(--t3);margin-bottom:5px;padding:4px 0;">No IEM data</div>`
+      }
+      ${showHigh ? `<div style="font-size:9px;color:var(--ok);margin-bottom:2px;font-weight:600;">HIGH</div>${mkBracketRows(data.highMkts,2)}` : ''}
+      ${showLow && data.lseries ? `<div style="font-size:9px;color:var(--info);margin-top:${showHigh?'6':'0'}px;margin-bottom:2px;font-weight:600;">LOW</div>${mkBracketRows(data.lowMkts,2)}` : ''}
+      ${showLow && !data.lseries ? `<div style="font-size:9px;color:var(--t3);margin-top:4px;">No LOW market</div>` : ''}
     </div>`;
   }).join('');
 }
 
-function jumpToMkt(series,icao,type) {
-  const sel=document.getElementById('mkSel');
-  for(let i=0;i<sel.options.length;i++){if(sel.options[i].value.startsWith(series+'|')){sel.selectedIndex=i;break;}}
+function jumpToCity(series, icao, type) {
+  const sel = document.getElementById('mkSel');
+  for(let i=0;i<sel.options.length;i++){
+    if(sel.options[i].value.includes(series)){sel.selectedIndex=i;break;}
+  }
   curSeries=series; curICAO=icao; curType=type;
-  showTab('markets',document.querySelector('.tab'));
-  document.querySelectorAll('.tab').forEach((t,i)=>{if(i===0){t.classList.add('active');}else{t.classList.remove('active');}});
-  document.getElementById('tab-markets').classList.add('active');
-  document.querySelectorAll('.panel').forEach((p,i)=>{if(i===0)p.classList.add('active');else p.classList.remove('active');});
+  // Switch to markets tab
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', i===0);
+  });
+  document.querySelectorAll('.panel').forEach((p,i)=>{
+    p.classList.toggle('active', i===0);
+  });
   loadBrackets();
 }
 
-// ================================================================
-// ANALYZE TAB
-// ================================================================
+
 async function runAFD() {
   const afd=document.getElementById('azAFD').value.trim();
   if(!afd){alert('Paste AFD text first.');return;}
@@ -1646,20 +1767,22 @@ function addMan(){
   const t=document.getElementById('manT').value.trim();
   const f=parseFloat(document.getElementById('manF').value);
   const w=document.getElementById('manW').value.trim();
+  const sky=document.getElementById('manSky')?.value.trim()||'';
   if(!t||isNaN(f))return;
-  monManRdgs.unshift({time:t,tempF:f,wind:w,gusts:null});
+  monManRdgs.unshift({time:t,tempF:f,wind:w,sky:sky,gusts:null});
   if(monManRdgs.length>10)monManRdgs.pop();
-  ['manT','manF','manW'].forEach(id=>document.getElementById(id).value='');
+  ['manT','manF','manW','manSky'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   renderManHist(); calcSigFrom(monManRdgs.map(r=>({tmpf:r.tempF,sknt:null})));
 }
 function clearMan(){monManRdgs=[];renderManHist();}
 function renderManHist(){
   const el=document.getElementById('manHist');
   if(!monManRdgs.length){el.innerHTML='<div style="color:var(--t3);font-size:11px;">No manual readings.</div>';return;}
-  el.innerHTML=monManRdgs.slice(0,3).map((r,i)=>{
+  el.innerHTML=monManRdgs.slice(0,5).map((r,i)=>{
     let tc='fl',ti='→';
     if(i<monManRdgs.length-1){const d=r.tempF-monManRdgs[i+1].tempF;if(d>.5){tc='up';ti='↑';}else if(d<-.5){tc='dn';ti='↓';}}
-    return `<div class="mrow ${i===0?'lat':''}"><span class="mt">${r.time}</span><span class="mp ${tc}">${r.tempF.toFixed(1)}°F</span><span class="mw">${r.wind||'—'}</span><span class="mtr">${ti}</span></div>`;
+    const skyStr = r.sky ? `<span style="font-size:10px;color:var(--t3);margin-left:4px;">${r.sky}</span>` : '';
+    return `<div class="mrow ${i===0?'lat':''}"><span class="mt">${r.time}</span><span class="mp ${tc}">${r.tempF.toFixed(1)}°F</span><span class="mw">${r.wind||'—'}</span><span class="mtr">${ti}</span>${skyStr}</div>`;
   }).join('');
 }
 
