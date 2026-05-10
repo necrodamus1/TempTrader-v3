@@ -1337,177 +1337,260 @@ async function runScan(ft) {
   document.getElementById('scanGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:28px;color:var(--t3);"><span class="spin"></span> Fetching cities...</div>';
 
   const mode = window._scanMode || 'high';
-  const showLow = mode === 'low' || mode === 'both';
-  const showHigh = mode === 'high' || mode === 'both';
+  const showLow  = mode === 'low'  || mode === 'both';
+  const showHigh = mode === 'high' || mode === 'both' || mode === 'tomorrow';
+  const isTmrw   = mode === 'tomorrow';
 
   const list = ft ? SCAN_LIST.filter(x=>CCFG[x.icao]?.type===ft) : SCAN_LIST;
   const res = {};
   let done = 0;
 
+  // Parse a Kalshi market API response into display-ready data
+  // Key fix: filter to RANGE brackets (-B ticker) FIRST, then sort by bid
+  // This prevents high-bid floor/ceiling brackets from hiding the real range market
+  function parseMkts(apiResult, preferTmrw) {
+    const all = (apiResult?.markets||[]).filter(m => m.status !== 'settled');
+
+    // Separate dates — get today and tomorrow based on ticker date codes
+    const dateCodes = [...new Set(all.map(m => m.event_ticker.split('-')[1]))].sort();
+    const todayCode = dateCodes[0] || '';
+    const tmrwCode  = dateCodes[1] || '';
+    const useCode   = (preferTmrw && tmrwCode) ? tmrwCode : todayCode;
+
+    // Filter to target date
+    const dated = useCode ? all.filter(m => m.event_ticker.includes(useCode)) : all;
+
+    // Separate range (-B) from floor/ceiling (-T) brackets
+    const rangeMkts = dated.filter(m => m.ticker.includes('-B'));
+    const fcMkts    = dated.filter(m => m.ticker.includes('-T'));
+
+    // Sort range brackets by bid DESC
+    rangeMkts.sort((a,b) =>
+      parseFloat(b.yes_bid_dollars||b.last_price_dollars||0) -
+      parseFloat(a.yes_bid_dollars||a.last_price_dollars||0)
+    );
+
+    // Model temp = midpoint of highest-bid range bracket
+    let modelTemp = null;
+    if (rangeMkts[0]) {
+      const nums = (rangeMkts[0].yes_sub_title||'').match(/[\d.]+/g);
+      if (nums && nums.length >= 2)
+        modelTemp = (parseFloat(nums[0]) + parseFloat(nums[1])) / 2;
+    }
+
+    // For display: show top range brackets; fall back to floor/ceiling if no ranges
+    const display = rangeMkts.length ? rangeMkts.slice(0,4) : fcMkts.slice(0,4);
+
+    return {
+      mkts: display,
+      rangeMkts,
+      fcMkts,
+      mktDate: useCode,
+      modelTemp,
+      hasTmrw: !!tmrwCode
+    };
+  }
+
   for (const {series, lseries, icao} of list) {
     stat.textContent = `${CCFG[icao]?.n||icao} (${done+1}/${list.length})...`;
     try {
-      // Build fetch list
       const fetches = [];
-      if (showHigh) fetches.push(fetch(`${BASE}/markets?series_ticker=${series}&status=open&limit=12`).then(r=>r.json()).catch(()=>({markets:[]})));
-      if (showLow && lseries) fetches.push(fetch(`${BASE}/markets?series_ticker=${lseries}&status=open&limit=10`).then(r=>r.json()).catch(()=>({markets:[]})));
+      if (showHigh)
+        fetches.push(fetch(`${BASE}/markets?series_ticker=${series}&status=open&limit=16`).then(r=>r.json()).catch(()=>({markets:[]})));
+      if (showLow && lseries)
+        fetches.push(fetch(`${BASE}/markets?series_ticker=${lseries}&status=open&limit=14`).then(r=>r.json()).catch(()=>({markets:[]})));
       fetches.push(fetch(iemUrl(icao)).then(r=>r.text()).catch(()=>''));
 
       const results = await Promise.all(fetches);
-      const csv = results[results.length - 1];
+      const csv = results[results.length-1];
       const iem = parseIEM(csv);
 
-      // Parse HIGH markets - just take open ones sorted by bid (Kalshi handles the date)
-      let highMkts = [];
-      if (showHigh) {
-        let m = (results[0].markets||[]).filter(mk => mk.status !== 'settled');
-        m.sort((a,b) => parseFloat(b.yes_bid_dollars||b.last_price_dollars||0) - parseFloat(a.yes_bid_dollars||a.last_price_dollars||0));
-        // Filter to range brackets (exclude floor/ceiling for main view)
-        const rangeMkts = m.filter(mk => (mk.yes_sub_title||'').includes(' to '));
-        highMkts = rangeMkts.length ? rangeMkts : m;
-        highMkts = highMkts.slice(0, 6);
-      }
+      let highData = {mkts:[],rangeMkts:[],fcMkts:[],mktDate:'',modelTemp:null,hasTmrw:false};
+      let lowData  = {mkts:[],rangeMkts:[],fcMkts:[],mktDate:'',modelTemp:null,hasTmrw:false};
 
-      // Parse LOW markets
-      let lowMkts = [];
+      if (showHigh) highData = parseMkts(results[0], isTmrw);
       if (showLow && lseries) {
         const ri = showHigh ? 1 : 0;
-        let lm = (results[ri]?.markets||[]).filter(mk => mk.status !== 'settled');
-        lm.sort((a,b) => parseFloat(b.yes_bid_dollars||b.last_price_dollars||0) - parseFloat(a.yes_bid_dollars||a.last_price_dollars||0));
-        const rangeLow = lm.filter(mk => (mk.yes_sub_title||'').includes(' to '));
-        lowMkts = rangeLow.length ? rangeLow : lm;
-        lowMkts = lowMkts.slice(0, 4);
+        lowData = parseMkts(results[ri], false);
       }
 
-      res[icao] = {highMkts, lowMkts, iem, series, lseries};
+      res[icao] = {highData, lowData, iem, series, lseries};
     } catch(e) {
-      res[icao] = {highMkts:[], lowMkts:[], iem:[], series, lseries, err:e.message};
+      const empty = {mkts:[],rangeMkts:[],fcMkts:[],mktDate:'',modelTemp:null,hasTmrw:false};
+      res[icao] = {highData:{...empty}, lowData:{...empty}, iem:[], series, lseries, err:e.message};
     }
     done++;
-    await new Promise(r => setTimeout(r, 280)); // sequential - avoids rate limits
+    await new Promise(r => setTimeout(r, 280));
   }
 
-  stat.innerHTML = `<span class="live"><span class="ldot"></span>${list.length} cities · ${new Date().toLocaleTimeString()}</span>`;
+  stat.innerHTML = `<span class="live"><span class="ldot"></span>${list.length} cities &middot; ${new Date().toLocaleTimeString()} &middot; ${isTmrw?'TOMORROW':'TODAY'}</span>`;
   renderScan(res, mode);
   btn.disabled=false; sp.style.display='none';
 }
 
-// Global scan mode
 window._scanMode = 'high';
 
 function setScanMode(mode, btn) {
   window._scanMode = mode;
-  ['modeHigh','modeLow','modeBoth'].forEach(id => {
+  ['modeHigh','modeLow','modeBoth','modeTmrw'].forEach(id => {
     const el = document.getElementById(id);
     if (el) { el.style.borderColor=''; el.style.color=''; }
   });
   if (btn) { btn.style.borderColor='var(--ac)'; btn.style.color='var(--ac)'; }
   const descs = {
-    high: 'HIGH markets · top 2 range brackets by bid · IEM live station · ⭐ BUY ZONE = 15–35¢',
-    low: '🌙 LOW markets · best for 10pm-5am PST · eastern cities peak low around midnight EST',
-    both: '📊 HIGH + LOW side by side · full daily picture'
+    high:     'Today HIGH · range brackets only · IEM live temp · 📡 = Kalshi model',
+    low:      '🌙 Today LOWs · range brackets · best 10pm-5am PST · eastern cities first',
+    both:     '📊 HIGH + LOW side by side · full daily picture',
+    tomorrow: '🌅 Tomorrow HIGH · early prices · available ~8am PST (11am EST)'
   };
   const d = document.getElementById('modeDesc');
-  if (d) d.textContent = descs[mode] || '';
+  if (d) d.textContent = descs[mode]||'';
+}
+
+function goTmrw() {
+  setScanMode('tomorrow', document.getElementById('modeTmrw'));
+  runScan();
 }
 
 function renderScan(res, mode) {
-  const showLow = mode === 'low' || mode === 'both';
-  const showHigh = mode === 'high' || mode === 'both';
+  const showLow  = mode === 'low'  || mode === 'both';
+  const showHigh = mode === 'high' || mode === 'both' || mode === 'tomorrow';
+  const isTmrw   = mode === 'tomorrow';
   const typeOrder = {smooth:0, marine:1, coastal:2, storm:3};
   const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
 
+  // Sort: by type, then buy zone count desc within type
   const sorted = Object.entries(res).sort((a,b) => {
     const ta = CCFG[a[0]]?.type||'z', tb = CCFG[b[0]]?.type||'z';
-    const od = (typeOrder[ta]||9) - (typeOrder[tb]||9);
+    const od = (typeOrder[ta]||9)-(typeOrder[tb]||9);
     if (od !== 0) return od;
-    // Sort by buy zone count desc within type
-    const abz = (a[1].highMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
-    const bbz = (b[1].highMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
+    const abz = (a[1].highData?.rangeMkts||[]).filter(m=>{
+      const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
+      return c>=15&&c<=35;
+    }).length;
+    const bbz = (b[1].highData?.rangeMkts||[]).filter(m=>{
+      const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
+      return c>=15&&c<=35;
+    }).length;
     return bbz - abz;
   });
 
-  const mkBracketRows = (mkts, max=2) => {
-    if (!mkts.length) return '<div style="font-size:10px;color:var(--t3);padding:4px 0;">No data</div>';
-    return mkts.slice(0, max).map(m => {
+  // Render top 2 brackets for a set of markets
+  const mkRows = (mkts, maxRows=2) => {
+    if (!mkts.length) return '<div style="font-size:10px;color:var(--t3);padding:3px 0;">No data</div>';
+    return mkts.slice(0, maxRows).map(m => {
       const bid = Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
       const ask = Math.round(parseFloat(m.yes_ask_dollars||0)*100);
-      const sub = m.yes_sub_title || m.subtitle || '?';
-      const isBuy = bid>=15&&bid<=35;
-      const isLot = bid>0&&bid<15;
-      const col = bid>=60?'var(--err)':bid>=35?'var(--warn)':isBuy?'var(--ok)':isLot?'var(--gold)':'var(--t3)';
-      const sig = isBuy?'⭐ ':isLot?'🎯 ':'';
+      const sub = m.yes_sub_title||m.subtitle||'?';
+      const isBuy = bid>=15 && bid<=35;
+      const isLot = bid>0 && bid<15;
+      const col = bid>=70 ? 'var(--err)' : bid>=40 ? 'var(--warn)' : isBuy ? 'var(--ok)' : isLot ? 'var(--gold)' : 'var(--t3)';
+      const sig = isBuy ? '⭐ ' : isLot ? '🎯 ' : '';
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-top:1px solid var(--b1);">
-        <span style="font-size:11px;color:var(--t2);">${sig}${sub}</span>
-        <div style="text-align:right;">
-          <span style="font-size:12px;font-weight:700;color:${col};">${bid}¢</span>
-          ${ask?`<span style="font-size:9px;color:var(--t3);margin-left:4px;">ask:${ask}</span>`:''}
-        </div>
+        <span style="font-size:11px;color:var(--t1);">${sig}${sub}</span>
+        <span style="font-size:12px;font-weight:700;color:${col};">${bid}¢${ask?`<span style="font-size:9px;color:var(--t3);"> ask:${ask}</span>`:''}
+        </span>
       </div>`;
     }).join('');
   };
 
+  // Format Kalshi date code e.g. "26MAY10" → "May 10"
+  const fmtDate = ds => {
+    if (!ds) return '';
+    const mo = {JAN:'Jan',FEB:'Feb',MAR:'Mar',APR:'Apr',MAY:'May',JUN:'Jun',
+                 JUL:'Jul',AUG:'Aug',SEP:'Sep',OCT:'Oct',NOV:'Nov',DEC:'Dec'};
+    const m = ds.match(/\d{2}([A-Z]{3})(\d{2})/);
+    return m ? `${mo[m[1]]||m[1]} ${parseInt(m[2])}` : ds;
+  };
+
+  const typeCols = {smooth:'var(--ok)', marine:'var(--info)', coastal:'var(--ac)', storm:'var(--err)'};
+
   document.getElementById('scanGrid').innerHTML = sorted.map(([icao, data]) => {
-    const cfg = CCFG[icao]; if(!cfg) return '';
+    const cfg = CCFG[icao]; if (!cfg) return '';
     const r = data.iem?.[0], prev = data.iem?.[1];
     let tc='fl', ti='→';
-    if(r&&prev){const d=r.tmpf-prev.tmpf;if(d>.8){tc='up';ti='↑';}else if(d<-.8){tc='dn';ti='↓';}}
+    if (r && prev) {
+      const d = r.tmpf - prev.tmpf;
+      if (d > .8) { tc='up'; ti='↑'; } else if (d < -.8) { tc='dn'; ti='↓'; }
+    }
 
-    const windStr = r && r.drct!=null ? `${dirs[Math.round((r.drct||0)/22.5)%16]} ${r.sknt?Math.round(r.sknt)+'kt':'?'}` : '';
-    const skyStr = r?.skyc1&&r.skyc1!=='M' ? r.skyc1 : '';
-    const timeStr = r?.valid?.slice(11,16) || '';
-    const staleStr = r?._stale ? ' ⚠' : '';
-    const ewindFlag = EAST.has(icao) && isEw(r?.drct) ? '<span style="font-size:9px;color:var(--warn);margin-left:4px;">E-WIND</span>' : '';
+    const windStr = (r && r.drct!=null)
+      ? `${dirs[Math.round((r.drct||0)/22.5)%16]} ${r.sknt ? Math.round(r.sknt)+'kt' : '?'}`
+      : '';
+    const skyStr   = (r?.skyc1 && r.skyc1!=='M') ? r.skyc1 : '';
+    const ewindFlag = EAST.has(icao) && isEw(r?.drct)
+      ? '<span style="font-size:9px;color:var(--warn);margin-left:4px;">⚠E-WIND</span>' : '';
+    const staleStr  = r?._stale
+      ? '<span style="font-size:9px;color:var(--err);margin-left:4px;">⚠STALE</span>' : '';
 
-    const typeCols = {smooth:'var(--ok)',marine:'var(--info)',coastal:'var(--ac)',storm:'var(--err)'};
+    const highBZ = (data.highData?.rangeMkts||[]).filter(m=>{
+      const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
+      return c>=15&&c<=35;
+    }).length;
+    const lowBZ = (data.lowData?.rangeMkts||[]).filter(m=>{
+      const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);
+      return c>=15&&c<=35;
+    }).length;
+    const totalBZ = (showHigh ? highBZ : 0) + (showLow ? lowBZ : 0);
+
+    const modelH = data.highData?.modelTemp
+      ? `<span style="font-size:10px;color:var(--warn);margin-left:5px;">📡${data.highData.modelTemp.toFixed(1)}°</span>` : '';
+    const modelL = data.lowData?.modelTemp
+      ? `<span style="font-size:10px;color:var(--info);margin-left:5px;">📡${data.lowData.modelTemp.toFixed(1)}°</span>` : '';
+    const tmrwBadge = (data.highData?.hasTmrw && !isTmrw)
+      ? `<span class="badge bw" style="font-size:8px;cursor:pointer;" onclick="event.stopPropagation();goTmrw()">+TMRW</span>` : '';
+
     const typeCol = typeCols[cfg.type]||'var(--t3)';
 
-    const highBZ = (data.highMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
-    const lowBZ = (data.lowMkts||[]).filter(m=>{const c=Math.round(parseFloat(m.yes_bid_dollars||m.last_price_dollars||0)*100);return c>=15&&c<=35;}).length;
-    const totalBZ = (showHigh?highBZ:0)+(showLow?lowBZ:0);
-
     return `<div class="sc" onclick="jumpToCity('${data.series}','${icao}','${cfg.type}')" style="cursor:pointer;border-left:3px solid ${typeCol};">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
         <div>
           <span style="font-weight:700;font-size:13px;">${cfg.n}</span>
-          <span style="font-size:10px;color:var(--t3);margin-left:5px;">${icao}</span>
+          <span style="font-size:9px;color:var(--t3);margin-left:4px;">${icao}</span>
         </div>
-        <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;justify-content:flex-end;">
+        <div style="display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;">
           <span class="badge b${cfg.type[0]}">${cfg.type.toUpperCase()}</span>
-          ${totalBZ>0?`<span class="badge bg">⭐${totalBZ}</span>`:''}
+          ${totalBZ>0 ? `<span class="badge bg">⭐${totalBZ}</span>` : ''}
+          ${tmrwBadge}
         </div>
       </div>
       ${r
-        ? `<div style="display:flex;align-items:flex-end;gap:8px;margin-bottom:4px;">
-             <span class="mp ${tc}" style="font-size:20px;">${r.tmpf.toFixed(1)}°F ${ti}</span>
-             <span style="font-size:10px;color:var(--t3);">${timeStr}${staleStr}</span>
+        ? `<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">
+             <span class="mp ${tc}" style="font-size:19px;">${r.tmpf.toFixed(1)}°F ${ti}</span>
+             <span style="font-size:10px;color:var(--t3);">${r.valid?.slice(11,16)||''}${staleStr}</span>
              ${ewindFlag}
            </div>
-           <div style="font-size:11px;color:var(--t3);margin-bottom:5px;">${windStr}${skyStr?' · '+skyStr:''}</div>`
-        : `<div style="font-size:11px;color:var(--t3);margin-bottom:5px;padding:4px 0;">No IEM data</div>`
+           <div style="font-size:10px;color:var(--t3);margin-bottom:4px;">${windStr}${skyStr?' · '+skyStr:''}</div>`
+        : `<div style="font-size:11px;color:var(--t3);margin-bottom:4px;">No IEM data</div>`
       }
-      ${showHigh ? `<div style="font-size:9px;color:var(--ok);margin-bottom:2px;font-weight:600;">HIGH</div>${mkBracketRows(data.highMkts,2)}` : ''}
-      ${showLow && data.lseries ? `<div style="font-size:9px;color:var(--info);margin-top:${showHigh?'6':'0'}px;margin-bottom:2px;font-weight:600;">LOW</div>${mkBracketRows(data.lowMkts,2)}` : ''}
-      ${showLow && !data.lseries ? `<div style="font-size:9px;color:var(--t3);margin-top:4px;">No LOW market</div>` : ''}
+      ${showHigh ? `
+        <div style="font-size:9px;color:var(--ok);font-weight:600;margin-bottom:2px;">
+          HIGH${data.highData?.mktDate ? ' · '+fmtDate(data.highData.mktDate) : ''}${modelH}
+        </div>
+        ${mkRows(data.highData?.mkts||[], 2)}
+      ` : ''}
+      ${(showLow && data.lseries) ? `
+        <div style="font-size:9px;color:var(--info);font-weight:600;margin-top:${showHigh?'5':'0'}px;margin-bottom:2px;">
+          LOW${data.lowData?.mktDate ? ' · '+fmtDate(data.lowData.mktDate) : ''}${modelL}
+        </div>
+        ${mkRows(data.lowData?.mkts||[], 2)}
+      ` : ''}
+      ${(showLow && !data.lseries) ? `<div style="font-size:9px;color:var(--t3);margin-top:4px;">No LOW market</div>` : ''}
     </div>`;
   }).join('');
 }
 
 function jumpToCity(series, icao, type) {
   const sel = document.getElementById('mkSel');
-  for(let i=0;i<sel.options.length;i++){
-    if(sel.options[i].value.includes(series)){sel.selectedIndex=i;break;}
+  for (let i=0; i<sel.options.length; i++) {
+    if (sel.options[i].value.includes(series)) { sel.selectedIndex=i; break; }
   }
   curSeries=series; curICAO=icao; curType=type;
-  // Switch to markets tab
-  document.querySelectorAll('.tab').forEach((t,i)=>{
-    t.classList.toggle('active', i===0);
-  });
-  document.querySelectorAll('.panel').forEach((p,i)=>{
-    p.classList.toggle('active', i===0);
-  });
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  document.querySelectorAll('.panel').forEach((p,i) => p.classList.toggle('active', i===0));
   loadBrackets();
 }
+
 
 
 async function runAFD() {
