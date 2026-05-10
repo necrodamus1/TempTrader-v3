@@ -340,6 +340,7 @@ textarea{resize:vertical;line-height:1.5;}
       <button class="btn btn-sm" id="modeHigh" onclick="setScanMode('high',this)" style="border-color:var(--ac);color:var(--ac);">📅 HIGH</button>
       <button class="btn btn-sm" id="modeLow" onclick="setScanMode('low',this)">🌙 LOWs</button>
       <button class="btn btn-sm" id="modeBoth" onclick="setScanMode('both',this)">📊 HIGH+LOW</button>
+      <button class="btn btn-sm" id="modeTmrw" onclick="setScanMode('tomorrow',this);runScan()">🌅 Tomorrow</button>
     </div>
     <div id="modeDesc" style="font-size:10px;color:var(--t3);margin-top:5px;">Today HIGH · top 2 brackets · IEM live station · LOWs great for 10pm-5am</div>
   </div>
@@ -585,7 +586,7 @@ const SMAP = {
 const SCAN_LIST = [
   {series:'KXHIGHTPHX',lseries:'KXLOWTPHX',icao:'KPHX'},
   {series:'KXHIGHTLV',lseries:'KXLOWTLV',icao:'KLAS'},
-  {series:'KXHIGHTATL',lseries:null,icao:'KATL'},
+  {series:'KXHIGHTATL',lseries:'KXLOWTATL',icao:'KATL'},
   {series:'KXHIGHTDAL',lseries:'KXLOWTDAL',icao:'KDFW'},
   {series:'KXHIGHAUS',lseries:'KXLOWTAUS',icao:'KAUS'},
   {series:'KXHIGHTSATX',lseries:null,icao:'KSAT'},
@@ -594,9 +595,9 @@ const SCAN_LIST = [
   {series:'KXHIGHTSEA',lseries:'KXLOWTSEA',icao:'KSEA'},
   {series:'KXHIGHLAX',lseries:'KXLOWTLAX',icao:'KLAX'},
   {series:'KXHIGHTSFO',lseries:'KXLOWTSFO',icao:'KSFO'},
-  {series:'KXHIGHNY',lseries:null,icao:'KNYC'},
+  {series:'KXHIGHNY',lseries:'KXLOWTNYC',icao:'KNYC'},
   {series:'KXHIGHTBOS',lseries:'KXLOWTBOS',icao:'KBOS'},
-  {series:'KXHIGHTDC',lseries:null,icao:'KDCA'},
+  {series:'KXHIGHTDC',lseries:'KXLOWTDC',icao:'KDCA'},
   {series:'KXHIGHPHIL',lseries:null,icao:'KPHL'},
   {series:'KXHIGHCHI',lseries:'KXLOWTCHI',icao:'KMDW'},
   {series:'KXHIGHTMIN',lseries:'KXLOWTMIN',icao:'KMSP'},
